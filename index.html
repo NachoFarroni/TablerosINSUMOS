@@ -228,12 +228,8 @@ tbody .col-deuda{background:rgba(224,238,255,.4)}tbody .col-total{background:rgb
 .dv-table tbody tr:nth-child(even){background:var(--gray-50)}
 .dv-table tbody tr:hover{background:var(--sky)!important}
 tbody td.dv-c-tot{background:rgba(224,238,255,.35)}
-.dv-c-excl td{color:var(--red)!important;font-style:italic}
-.dv-c-excl td.dv-c-tot{background:var(--red-light)}
 .dv-cliente{font-family:var(--font-sans)!important;color:var(--navy);font-weight:500;cursor:pointer;display:flex;align-items:center;gap:5px;white-space:nowrap}
-.dv-c-excl .dv-cliente{color:var(--red)!important}
 .dv-cliente:hover .cliente-name{text-decoration:underline;color:var(--blue)}
-.dv-check{accent-color:var(--blue);width:14px;height:14px;cursor:pointer}
 .dv-com-wrap{display:flex;align-items:center;gap:3px;min-width:280px}
 .dv-com{flex:1;border:1px solid transparent;background:transparent;font-family:var(--font-sans);font-size:.73rem;color:var(--gray-800);padding:3px 5px;border-radius:4px;min-width:0}
 .dv-com:focus{outline:none;border-color:var(--blue);background:var(--white)}
@@ -245,7 +241,7 @@ tbody td.dv-c-tot{background:rgba(224,238,255,.35)}
 .dv-legend span{font-size:.7rem;color:var(--gray-600)}
 .dv-banner{background:var(--amber-light);border:1px solid #fcd34d;border-radius:var(--radius);color:var(--amber-dark);padding:9px 14px;font-size:.8rem;margin-bottom:14px}
 .dv-num{text-align:right;white-space:nowrap}
-@media print{.app-header,.header-actions,.toolbar,.filter-bar,.legend-bar,.app-footer,.btn,.search-wrap,.col-toggle-wrap,.params-mini-bar,.alert-strip,.dv-params,.dv-reset{display:none!important}.table-wrap,.seg-table-wrap,.dv-table-wrap{box-shadow:none;border:1px solid #ccc}.dv-c-excl td{color:#dc2626!important;-webkit-print-color-adjust:exact;print-color-adjust:exact}}
+@media print{.app-header,.header-actions,.toolbar,.filter-bar,.legend-bar,.app-footer,.btn,.search-wrap,.col-toggle-wrap,.params-mini-bar,.alert-strip,.dv-params,.dv-reset{display:none!important}.table-wrap,.seg-table-wrap,.dv-table-wrap{box-shadow:none;border:1px solid #ccc}}
 </style>
 </head>
 <body><div id="root"></div>
@@ -552,6 +548,7 @@ function saveDV(d){try{localStorage.setItem(DV_STORAGE_KEY,JSON.stringify(d))}ca
 
 // Baldes de antigüedad, sin solaparse: 0-30 / 31-60 / 61-90 / 91+
 const DV_BUCKETS=['0 - 30 días','30 - 60 días','60 - 90 días','+90 días'];
+const DV_MIN_USD=1000;   // por debajo de este importe el cliente no se muestra ni suma al total
 function dvBucket(dias){
   if(dias<=30)return 0;
   if(dias<=60)return 1;
@@ -648,6 +645,7 @@ function dvRows(recs,corte,tcDV,precios,dvState){
   const rows=[];
   for(const c of Object.keys(deuda)){
     const d=deuda[c],r=resp[c]||null;
+    if(d.total<=DV_MIN_USD)continue;         // deuda vencida menor o igual a USD 1.000 → fuera del reporte
     const st=dvState[c]||{};
     const auto=dvComentarioAuto(r);
     rows.push({
@@ -657,8 +655,7 @@ function dvRows(recs,corte,tcDV,precios,dvState){
       respaldo:(r?r.chqTotal:0)+(r?r.cttoTotal:0),
       comentarioAuto:auto,
       comentario:(st.comentario!==undefined&&st.comentario!==null)?st.comentario:auto,
-      editado:st.comentario!==undefined&&st.comentario!==null,
-      incluido:st.incluido!==false
+      editado:st.comentario!==undefined&&st.comentario!==null
     });
   }
   return rows.sort((a,b)=>b.total-a.total);
@@ -686,18 +683,15 @@ function exportToExcel(periods,params,obs,dv){
 
   // Hoja del reporte de Deuda Vencida
   if(dv&&dv.rows&&dv.rows.length){
-    const dh=['RAZ\u00d3N SOCIAL','PART. VENC. EN USD','0 - 30 D\u00cdAS','30 - 60 D\u00cdAS','60 - 90 D\u00cdAS','+90 D\u00cdAS','COMENTARIOS','EN TOTAL'];
+    const dh=['RAZ\u00d3N SOCIAL','PART. VENC. EN USD','0 - 30 D\u00cdAS','30 - 60 D\u00cdAS','60 - 90 D\u00cdAS','+90 D\u00cdAS','COMENTARIOS'];
     const data=[dh];
     dv.rows.forEach(r=>data.push([r.cliente,r.total||null,r.buckets[0]||null,r.buckets[1]||null,
-      r.buckets[2]||null,r.buckets[3]||null,r.comentario,r.incluido?'SI':'NO']));
-    const inc=dv.rows.filter(r=>r.incluido);
-    const tt=inc.reduce((a,r)=>a+(r.total||0),0);
-    const tb=i=>inc.reduce((a,r)=>a+(r.buckets[i]||0),0);
-    const fuera=dv.rows.length-inc.length;
-    data.push(['TOTAL ('+inc.length+' clientes'+(fuera?', '+fuera+' fuera':'')+')',
-      tt,tb(0),tb(1),tb(2),tb(3),'','']);
+      r.buckets[2]||null,r.buckets[3]||null,r.comentario]));
+    const tt=dv.rows.reduce((a,r)=>a+(r.total||0),0);
+    const tb=i=>dv.rows.reduce((a,r)=>a+(r.buckets[i]||0),0);
+    data.push(['TOTAL ('+dv.rows.length+' clientes)',tt,tb(0),tb(1),tb(2),tb(3),'']);
     const ws=XLSX.utils.aoa_to_sheet(data);
-    ws['!cols']=[{wch:45},{wch:16},{wch:14},{wch:14},{wch:14},{wch:14},{wch:60},{wch:9}];
+    ws['!cols']=[{wch:45},{wch:16},{wch:14},{wch:14},{wch:14},{wch:14},{wch:60}];
     XLSX.utils.book_append_sheet(wb,ws,safeName('Deuda Vencida'));
   }
 
@@ -1158,10 +1152,8 @@ function DeudaVencidaView({rows,corte,onCorte,tc,onTc,precios,dvState,onDvState,
     return 0;
   });
 
-  const incluidos=filtered.filter(r=>r.incluido);
-  const fuera=filtered.length-incluidos.length;
-  const tTot=incluidos.reduce((s,r)=>s+r.total,0);
-  const tBal=i=>incluidos.reduce((s,r)=>s+r.buckets[i],0);
+  const tTot=filtered.reduce((s,r)=>s+r.total,0);
+  const tBal=i=>filtered.reduce((s,r)=>s+r.buckets[i],0);
 
   const onSort=k=>{if(sortKey===k)setSortDir(d=>d==='asc'?'desc':'asc');else{setSortKey(k);setSortDir('desc');}};
   const thS=(k,label,cls='')=>h('th',{className:cls,onClick:()=>onSort(k)},label,' ',
@@ -1196,23 +1188,18 @@ function DeudaVencidaView({rows,corte,onCorte,tc,onTc,precios,dvState,onDvState,
       h('span',{},'🌱 Soja USD '+(precios.sojaUSD||0)+'/tn'),
       h('span',{},'🌽 Maíz USD '+(precios.maizUSD||0)+'/tn'),
       h('span',{},'🌾 Trigo USD '+(precios.trigoUSD||0)+'/tn'),
-      h('span',{},'📊 '+incluidos.length+' clientes en el total'+(fuera?' · '+fuera+' excluido(s)':'')),
-      h('span',{},'⛔ Sin Pte de Facturar — solo cuenta corriente'),
+      h('span',{},'📊 '+filtered.length+' clientes'),
+      h('span',{},'🔎 Deuda vencida mín. USD '+DV_MIN_USD.toLocaleString('es-AR')),
     ),
     h('div',{className:'dv-table-wrap'},
       h('table',{className:'dv-table'},
         h('thead',{},h('tr',{},
-          h('th',{style:{width:'40px',cursor:'default'}},'Inc.'),
           thS('cliente','Razón Social',''),
           thS('total','Part. Venc. en USD','dv-num dv-c-tot'),
           ...DV_BUCKETS.map((b,i)=>thS(i,b,'dv-num')),
           h('th',{style:{cursor:'default',textAlign:'left',minWidth:'300px'}},'Comentarios'),
         )),
-        h('tbody',{},filtered.map(r=>h('tr',{key:r.cliente,className:r.incluido?'':'dv-c-excl'},
-          h('td',{style:{textAlign:'center'}},
-            h('input',{type:'checkbox',className:'dv-check',checked:r.incluido,
-              title:r.incluido?'Incluido en el total':'Excluido del total',
-              onChange:()=>upd(r.cliente,'incluido',!r.incluido)})),
+        h('tbody',{},filtered.map(r=>h('tr',{key:r.cliente},
           h('td',{},h('div',{className:'dv-cliente',onClick:()=>setDetail(r)},
             h('span',{className:'cliente-name'},r.cliente),h('span',{className:'detail-btn'},'ver detalle'))),
           h('td',{className:'dv-num dv-c-tot'},fmtUSD(r.total)),
@@ -1226,8 +1213,7 @@ function DeudaVencidaView({rows,corte,onCorte,tc,onTc,precios,dvState,onDvState,
           ))
         ))),
         h('tfoot',{},h('tr',{className:'dv-totals'},
-          h('td',{},''),
-          h('td',{},'TOTAL ('+incluidos.length+' clientes'+(fuera?', '+fuera+' fuera':'')+')'),
+          h('td',{},'TOTAL ('+filtered.length+' clientes)'),
           h('td',{className:'dv-num'},fmtUSD(tTot)),
           ...DV_BUCKETS.map((b,i)=>h('td',{key:i,className:'dv-num'},fmtUSD(tBal(i)))),
           h('td',{},''),
@@ -1237,7 +1223,7 @@ function DeudaVencidaView({rows,corte,onCorte,tc,onTc,precios,dvState,onDvState,
     h('div',{className:'dv-legend'},
       h('span',{},'Muestra solo cuenta corriente con vencimiento a fecha de corte, inclusive. No incluye Pte de Facturar'+(sinNegocios?' (no se cargó el Excel de Negocios)':'')+'.'),
       h('span',{},'Los cheques y contratos NO se restan: se informan como respaldo en Comentarios, por su total, sin toparlos contra la deuda.'),
-      h('span',{},'La suma de los cuatro baldes cierra contra Part. Venc. Filas destildadas quedan visibles pero fuera del total.'),
+      h('span',{},'La suma de los cuatro baldes cierra contra Part. Venc. Solo se listan clientes con deuda vencida mayor a USD '+DV_MIN_USD.toLocaleString('es-AR')+'.'),
       h('span',{},'Comentarios editables y guardados en este navegador. El botón ↺ vuelve al automático.'),
     ),
     detail&&h(DVDetailModal,{row:detail,onClose:()=>setDetail(null)})
