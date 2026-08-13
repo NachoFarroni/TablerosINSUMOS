@@ -338,7 +338,7 @@ function fmtFechaISO(iso){const d=parseISODate(iso);return d?d.toLocaleDateStrin
 const r2=v=>Math.round(num(v)*100)/100;
 // Última línea de defensa: aunque la función devuelva algo, si el precio por tonelada
 // convertido a dólares no es plausible, no se aplica. Un grano no vale USD 19.000/tn.
-const PRECIO_USD_MIN=20,PRECIO_USD_MAX=2000;
+const PRECIO_USD_MIN=70,PRECIO_USD_MAX=900;   // rango realista de soja/maíz/trigo en USD por tonelada
 function preciosPlausibles(p){
   return['sojaUSD','maizUSD','trigoUSD'].every(k=>p[k]>=PRECIO_USD_MIN&&p[k]<=PRECIO_USD_MAX);
 }
