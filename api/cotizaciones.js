@@ -85,12 +85,10 @@ function parseBNA(html) {
     const dentro = candidatas.filter(c => c.pos >= desde);
     if (dentro.length) return { ...dentro[0], modo: 'bloque divisas' };
   }
-  // 2) Si no se pudo ubicar el bloque, la divisa es la venta más baja
-  if (candidatas.length > 1) {
-    const min = candidatas.reduce((a, b) => (b.venta < a.venta ? b : a));
-    return { ...min, modo: 'menor venta entre ' + candidatas.length + ' filas de dólar' };
-  }
-  return { ...candidatas[0], modo: 'única fila de dólar' };
+  // 2) Si no se pudo ubicar el bloque, NO se adivina: quedarse con la venta más
+  //    baja hacía que cualquier número suelto de la página ganara.
+  if (candidatas.length === 1) return { ...candidatas[0], modo: 'única fila de dólar' };
+  return null;
 }
 
 // ── Cámara Arbitral de Cereales (BCR) ───────────────────────────────────────
@@ -182,23 +180,40 @@ module.exports = async (req, res) => {
   let granos = { ok: false, soja: 0, maiz: 0, trigo: 0, fecha: null, fuente: null };
   const dbg = {};
 
-  // 1) Dólar: BNA (fuente pedida); si falla, histórico mayorista
+  // 1) Dólar.
+  //    La API mayorista viene devolviendo exactamente el mismo valor que la Divisa
+  //    Vendedor del BNA (1490,5 y 1491,50 en dos días distintos), y es un JSON estable.
+  //    El scrapeo del HTML del BNA demostró ser frágil, así que queda como verificación:
+  //    informa si difiere, pero no pisa el valor bueno.
   try {
-    const html = await getText(BNA_URL);
+    let ref = await dolarHistorico(fecha);
+    if (!ref) {
+      const j = JSON.parse(await getText('https://dolarapi.com/v1/dolares/mayorista', 5000));
+      if (j && j.venta) ref = { compra: j.compra || 0, venta: j.venta, fecha: (j.fechaActualizacion||'').slice(0,10) || null };
+    }
+    if (!ref) throw new Error('sin cotización mayorista en los últimos 7 días');
+    if (ref.venta < TC_MIN || ref.venta > TC_MAX) throw new Error('valor fuera de rango: ' + ref.venta);
+    dolar = { ok: true, valor: ref.venta, compra: ref.compra, fecha: ref.fecha,
+              fuente: 'Divisa Vendedor (mayorista)' };
+  } catch (e) { errores.push('Dólar: ' + e.message); }
+
+  // Verificación contra el HTML del BNA — solo informa, nunca reemplaza
+  try {
+    const html = await getText(BNA_URL, 6000);
     if (debug) dbg.bna = extractos(html, ['DOLAR']);
     const p = parseBNA(html);
-    if (!p || !p.venta) throw new Error('no se encontró la fila del dólar');
-    dolar = { ok: true, valor: p.venta, compra: p.compra, fecha: null,
-              fuente: 'BNA — Divisa Vendedor', nota: p.modo };
-  } catch (e) {
-    errores.push('BNA: ' + e.message);
-    try {
-      const h = await dolarHistorico(fecha);
-      if (!h) throw new Error('sin cotización en los últimos 7 días');
-      dolar = { ok: true, valor: h.venta, compra: h.compra, fecha: h.fecha,
-                fuente: 'Mayorista (respaldo) — venta' };
-    } catch (e2) { errores.push('Respaldo dólar: ' + e2.message); }
-  }
+    if (p && p.venta) {
+      dolar.bnaLeido = p.venta; dolar.bnaModo = p.modo;
+      if (!dolar.ok) {                                   // último recurso
+        dolar = { ok: true, valor: p.venta, compra: p.compra, fecha: null,
+                  fuente: 'BNA — Divisa Vendedor (scrapeo)', nota: p.modo };
+      } else {
+        const dif = Math.abs(p.venta - dolar.valor) / dolar.valor;
+        if (dif > 0.05) errores.push('Aviso: el HTML del BNA dice ' + p.venta +
+          ' y la cotización mayorista ' + dolar.valor + ' (difieren ' + Math.round(dif*100) + '%). Se usó la mayorista.');
+      }
+    }
+  } catch (e) { if (debug) dbg.bnaError = e.message; }
 
   // 2) Granos: pizarra de la Cámara Arbitral de Cereales (BCR), en ARS/tn
   try {
