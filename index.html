@@ -210,6 +210,18 @@ tbody .col-deuda{background:rgba(224,238,255,.4)}tbody .col-total{background:rgb
 /* Seg detail modal */
 .seg-detail-modal{background:var(--white);border-radius:var(--radius-lg);box-shadow:var(--shadow-lg);width:100%;max-width:700px;overflow:hidden;animation:modalIn .2s ease}
 .app-footer{text-align:center;padding:13px;font-size:.7rem;color:var(--gray-400);border-top:1px solid var(--gray-200);background:var(--white)}
+/* COTIZACIONES AUTOMÁTICAS */
+.cot-bar{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:14px;padding:9px 13px;border-radius:var(--radius);font-size:.78rem;line-height:1.45}
+.cot-bar.ok{background:var(--green-light);border:1px solid #86efac;color:#14532d}
+.cot-bar.load{background:var(--sky);border:1px solid var(--sky-dark);color:var(--navy)}
+.cot-bar.warn{background:var(--amber-light);border:1px solid #fcd34d;color:var(--amber-dark)}
+.cot-bar b{font-weight:700}
+.cot-detail{font-family:var(--font-mono);font-size:.72rem;opacity:.85}
+.btn-cot{margin-left:auto;background:var(--white);border:1px solid var(--gray-200);border-radius:var(--radius);padding:4px 10px;font-size:.73rem;font-weight:600;cursor:pointer;color:var(--navy);font-family:var(--font-sans);white-space:nowrap}
+.btn-cot:hover{border-color:var(--blue);background:var(--sky)}
+.btn-cot:disabled{opacity:.5;cursor:not-allowed}
+.pill-auto{font-size:.62rem;font-weight:700;padding:1px 6px;border-radius:20px;background:var(--green-light);color:var(--green);border:1px solid #86efac;margin-left:6px}
+.pill-man{font-size:.62rem;font-weight:700;padding:1px 6px;border-radius:20px;background:var(--amber-light);color:var(--amber-dark);border:1px solid #fcd34d;margin-left:6px}
 /* DEUDA VENCIDA */
 .dv-section{padding-top:32px}
 .dv-params{display:flex;gap:16px;align-items:flex-start;flex-wrap:wrap;background:var(--white);border:1px solid var(--gray-200);border-radius:var(--radius-lg);padding:14px 18px;margin-bottom:12px;box-shadow:var(--shadow)}
@@ -304,6 +316,50 @@ const DEDUP_MAP={
   'TERRA VERDE AGRO INSUMOS SA SA':'TERRA VERDE AGRO INSUMOS SA','Terra Verde Agro Insumos SA':'TERRA VERDE AGRO INSUMOS SA',
 };
 function canonical(n){const s=(n||'').toString().trim();return DEDUP_MAP[s]||s;}
+
+// ═══ COTIZACIONES ═══
+// El navegador no puede leer bna.com.ar ni cac.bcr.com.ar (esos sitios no habilitan
+// CORS). Por eso el tablero le pregunta a /api/cotizaciones, una función que corre en
+// el servidor de Vercel y sí puede leerlas. Si esa función no está publicada, se
+// intenta al menos el dólar contra una API pública con CORS.
+const COTIZ_API='/api/cotizaciones';
+const COTIZ_FALLBACK_USD='https://dolarapi.com/v1/dolares/mayorista';
+
+function hoyISO(){
+  const d=new Date();
+  return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');
+}
+function diaAnteriorISO(iso){
+  const d=parseISODate(iso)||new Date();
+  const a=new Date(d.getFullYear(),d.getMonth(),d.getDate()-1);
+  return a.getFullYear()+'-'+String(a.getMonth()+1).padStart(2,'0')+'-'+String(a.getDate()).padStart(2,'0');
+}
+function fmtFechaISO(iso){const d=parseISODate(iso);return d?d.toLocaleDateString('es-AR'):'—';}
+const r2=v=>Math.round(num(v)*100)/100;
+
+async function traerCotizaciones(fechaTablero){
+  const objetivo=diaAnteriorISO(fechaTablero);
+  try{
+    const r=await fetch(COTIZ_API+'?fecha='+objetivo,{cache:'no-store'});
+    if(r.ok){
+      const j=await r.json();
+      if((j.dolar&&j.dolar.ok)||(j.granos&&j.granos.ok))return{...j,objetivo};
+    }
+  }catch(e){/* la función no está publicada o no respondió */}
+  // Respaldo: al menos el dólar, desde una API pública con CORS
+  try{
+    const r=await fetch(COTIZ_FALLBACK_USD,{cache:'no-store'});
+    if(r.ok){
+      const j=await r.json();
+      if(j&&j.venta)return{ok:false,objetivo,
+        dolar:{ok:true,valor:num(j.venta),fecha:(j.fechaActualizacion||'').slice(0,10)||null,fuente:'Mayorista (respaldo) — venta'},
+        granos:{ok:false},
+        errores:['No respondió /api/cotizaciones: los precios de pizarra hay que cargarlos a mano.']};
+    }
+  }catch(e){}
+  return{ok:false,objetivo,dolar:{ok:false},granos:{ok:false},
+    errores:['No se pudieron traer las cotizaciones automáticamente.']};
+}
 
 // ═══ ENGINE ═══
 // Cada Excel se parsea UNA sola vez a registros normalizados y después se filtra por período.
@@ -732,29 +788,56 @@ function SummaryCard({label,value,sub,accent}){
     sub&&h('div',{className:'sc-sub'},sub));
 }
 
-function ParamsPanel({params,onChange}){
+function CotizBar({cotiz,onRefresh}){
+  if(!cotiz)return null;
+  if(cotiz.estado==='cargando')
+    return h('div',{className:'cot-bar load'},h('span',{className:'spinner',style:{borderTopColor:'var(--navy)',borderColor:'rgba(15,39,68,.25)'}}),
+      ' Buscando el TC del BNA y la pizarra de la Cámara Arbitral…');
+  const d=cotiz.dolar||{},g=cotiz.granos||{};
+  const partes=[];
+  if(d.ok)partes.push('TC '+d.fuente+': $'+num(d.valor).toLocaleString('es-AR')+(d.fecha?' ('+fmtFechaISO(d.fecha)+')':''));
+  if(g.ok)partes.push('Pizarra: Soja $'+num(g.soja).toLocaleString('es-AR')+' · Maíz $'+num(g.maiz).toLocaleString('es-AR')+' · Trigo $'+num(g.trigo).toLocaleString('es-AR')+' ARS/tn'+(g.fecha?' ('+fmtFechaISO(g.fecha)+')':''));
+  const btn=h('button',{className:'btn-cot',onClick:onRefresh},'↻ Actualizar cotizaciones');
+  if(d.ok&&g.ok)
+    return h('div',{className:'cot-bar ok'},h('span',{},'✅'),
+      h('span',{},h('b',{},'Cotizaciones cargadas automáticamente. '),
+        h('span',{className:'cot-detail'},partes.join('  ·  '))),btn);
+  return h('div',{className:'cot-bar warn'},h('span',{},'⚠'),
+    h('span',{},h('b',{},(d.ok||g.ok)?'Carga automática parcial — completá a mano lo que falte. ':'No se pudieron cargar las cotizaciones — cargalas a mano. '),
+      h('span',{className:'cot-detail'},
+        (partes.length?partes.join('  ·  ')+'  ·  ':'')+
+        'Buscá los valores del '+fmtFechaISO(cotiz.objetivo)+' en bna.com.ar/Personas y cac.bcr.com.ar/es/precios-de-pizarra.'),
+      (cotiz.errores&&cotiz.errores.length)?h('div',{className:'cot-detail',style:{marginTop:'3px',opacity:.7}},cotiz.errores.join(' · ')):null),
+    btn);
+}
+
+function ParamsPanel({params,onChange,cotiz,onRefresh,onTc,onPrecio,precAuto}){
   const p=params.precios;
-  const updP=(k,v)=>onChange({...params,precios:{...p,[k]:v}});
-  return h('div',{className:'params-panel'},
-    h('div',{className:'params-title'},h('span',{},'⚙'),' Parámetros del tablero'),
-    h('div',{className:'params-grid'},
-      h('label',{className:'param-group'},h('span',{},'Fecha del tablero'),
-        h('input',{type:'date',value:params.fechaTablero,onChange:e=>onChange({...params,fechaTablero:e.target.value})})),
-      h('label',{className:'param-group'},h('span',{},'TC Dólar Divisa Vendedor Nación'),
-        h('div',{className:'input-prefix'},h('span',{className:'pfx'},'$'),
-          h('input',{type:'number',step:'0.01',value:params.tc,onChange:e=>onChange({...params,tc:parseFloat(e.target.value)||0})}))),
-      // Grain prices in USD directly
-      ...['sojaUSD','maizUSD','trigoUSD'].map(g=>h('label',{className:'param-group',key:g},
-        h('span',{},{sojaUSD:'🌱 Soja — Pizarra BCR (USD/tn)',maizUSD:'🌽 Maíz — Pizarra BCR (USD/tn)',trigoUSD:'🌾 Trigo — Pizarra BCR (USD/tn)'}[g]),
-        h('div',{className:'input-prefix'},h('span',{className:'pfx'},'USD'),
-          h('input',{type:'number',step:'0.01',value:p[g]||'',onChange:e=>updP(g,parseFloat(e.target.value)||0)}))))
-    ),
-    h('div',{className:'params-preview'},
-      h('span',{},'Soja: USD '+(p.sojaUSD||0)+'/tn'),
-      h('span',{},'Maíz: USD '+(p.maizUSD||0)+'/tn'),
-      h('span',{},'Trigo: USD '+(p.trigoUSD||0)+'/tn'),
-      h('span',{style:{color:'var(--amber)',background:'var(--amber-light)'}},'⚠ Actualizar precios con pizarra CAC/BCR del día'),
-      h('span',{},'🗂 Las pestañas de meses se generan solas según los movimientos detectados')
+  const pill=precAuto?h('span',{className:'pill-auto'},'auto'):h('span',{className:'pill-man'},'manual');
+  return h('div',{},
+    h(CotizBar,{cotiz,onRefresh}),
+    h('div',{className:'params-panel'},
+      h('div',{className:'params-title'},h('span',{},'⚙'),' Parámetros del tablero'),
+      h('div',{className:'params-grid'},
+        h('label',{className:'param-group'},h('span',{},'Fecha del tablero'),
+          h('input',{type:'date',value:params.fechaTablero,onChange:e=>onChange({...params,fechaTablero:e.target.value})})),
+        h('label',{className:'param-group'},h('span',{},'TC Dólar Divisa Vendedor Nación'),
+          h('div',{className:'input-prefix'},h('span',{className:'pfx'},'$'),
+            h('input',{type:'number',step:'0.01',value:params.tc,onChange:e=>onTc(parseFloat(e.target.value)||0)}))),
+        ...['sojaUSD','maizUSD','trigoUSD'].map(g=>h('label',{className:'param-group',key:g},
+          h('span',{},{sojaUSD:'🌱 Soja — Pizarra BCR (USD/tn)',maizUSD:'🌽 Maíz — Pizarra BCR (USD/tn)',trigoUSD:'🌾 Trigo — Pizarra BCR (USD/tn)'}[g],pill),
+          h('div',{className:'input-prefix'},h('span',{className:'pfx'},'USD'),
+            h('input',{type:'number',step:'0.01',value:p[g]||'',onChange:e=>onPrecio(g,parseFloat(e.target.value)||0)}))))
+      ),
+      h('div',{className:'params-preview'},
+        h('span',{},'Soja: USD '+(p.sojaUSD||0)+'/tn'),
+        h('span',{},'Maíz: USD '+(p.maizUSD||0)+'/tn'),
+        h('span',{},'Trigo: USD '+(p.trigoUSD||0)+'/tn'),
+        precAuto
+          ?h('span',{style:{color:'var(--green)',background:'var(--green-light)'}},'✅ Los precios se recalculan solos si cambiás el TC')
+          :h('span',{style:{color:'var(--amber)',background:'var(--amber-light)'}},'✏ Precios editados a mano — no se recalculan con el TC'),
+        h('span',{},'🗂 Las pestañas de meses se generan solas según los movimientos detectados')
+      )
     )
   );
 }
@@ -1234,10 +1317,13 @@ function DeudaVencidaView({rows,corte,onCorte,tc,onTc,precios,dvState,onDvState,
 function App(){
   const[files,setFiles]=useState({ctaCte:null,cheques:null,negocios:null,canjes:null});
   const[params,setParams]=useState({
-    fechaTablero:'2026-08-07',tc:1498.50,
-    // Pizarra BCR convertida a USD/tn (referencia 06/08/2026 — actualizar cada vez que se use)
-    precios:{sojaUSD:340.83,maizUSD:186.98,trigoUSD:214.96}
+    fechaTablero:hoyISO(),   // siempre el día en que se entra al tablero
+    // Semilla de respaldo: se pisa apenas responden las cotizaciones automáticas
+    tc:1498.50,precios:{sojaUSD:340.83,maizUSD:186.98,trigoUSD:214.96}
   });
+  const[cotiz,setCotiz]=useState({estado:'cargando',objetivo:diaAnteriorISO(hoyISO())});
+  const[granosARS,setGranosARS]=useState(null);   // pizarra cruda, para recalcular si cambia el TC
+  const[precAuto,setPrecAuto]=useState(true);     // false apenas el usuario toca un precio a mano
   const[result,setResult]=useState(null);
   const[loading,setLoading]=useState(false);
   const[error,setError]=useState(null);
@@ -1257,6 +1343,36 @@ function App(){
   const[dvState,setDvState]=useState(()=>loadDV());
   const[dvCorte,setDvCorte]=useState(params.fechaTablero);
   const[dvTc,setDvTc]=useState(params.tc);
+
+  // Al entrar (y al recargar) se piden solas: fecha de hoy, TC y pizarra del día anterior
+  const cargarCotiz=useCallback(async()=>{
+    const fecha=hoyISO();
+    setCotiz(c=>({...c,estado:'cargando',objetivo:diaAnteriorISO(fecha)}));
+    const d=await traerCotizaciones(fecha);
+    setCotiz({...d,estado:'listo'});
+    setParams(p=>{
+      const tc=(d.dolar&&d.dolar.ok&&d.dolar.valor)?num(d.dolar.valor):p.tc;
+      let precios=p.precios;
+      if(d.granos&&d.granos.ok&&tc>0){
+        setGranosARS({soja:d.granos.soja,maiz:d.granos.maiz,trigo:d.granos.trigo});
+        setPrecAuto(true);
+        precios={sojaUSD:r2(d.granos.soja/tc),maizUSD:r2(d.granos.maiz/tc),trigoUSD:r2(d.granos.trigo/tc)};
+      }
+      return{...p,fechaTablero:fecha,tc,precios};
+    });
+  },[]);
+  useEffect(()=>{cargarCotiz();},[cargarCotiz]);
+
+  // Si se cambia el TC a mano y los precios siguen en automático, se revalorizan solos
+  const setTc=useCallback(v=>{
+    setParams(p=>{
+      const precios=(precAuto&&granosARS&&v>0)
+        ?{sojaUSD:r2(granosARS.soja/v),maizUSD:r2(granosARS.maiz/v),trigoUSD:r2(granosARS.trigo/v)}
+        :p.precios;
+      return{...p,tc:v,precios};
+    });
+  },[precAuto,granosARS]);
+  const setPrecio=useCallback((k,v)=>{setPrecAuto(false);setParams(p=>({...p,precios:{...p.precios,[k]:v}}));},[]);
 
   useEffect(()=>{saveStorage(seguimiento);},[seguimiento]);
   useEffect(()=>{saveDV(dvState);},[dvState]);
@@ -1318,7 +1434,7 @@ function App(){
         h('div',{className:'params-toggle-bar'},
           h('button',{className:'btn-toggle',onClick:()=>setShowParams(p=>!p)},showParams?'▲':'▼',' Parámetros del tablero ',h('span',{className:'params-badge'},'TC: $'+params.tc.toLocaleString('es-AR')))
         ),
-        showParams&&h(ParamsPanel,{params,onChange:setParams}),
+        showParams&&h(ParamsPanel,{params,onChange:setParams,cotiz,onRefresh:cargarCotiz,onTc:setTc,onPrecio:setPrecio,precAuto}),
         h('div',{className:'process-row'},
           error&&h('div',{className:'error-msg'},error),
           h('button',{className:'btn btn-process',onClick:handleProcess,disabled:!allLoaded||loading},
