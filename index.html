@@ -336,6 +336,12 @@ function diaAnteriorISO(iso){
 }
 function fmtFechaISO(iso){const d=parseISODate(iso);return d?d.toLocaleDateString('es-AR'):'—';}
 const r2=v=>Math.round(num(v)*100)/100;
+// Última línea de defensa: aunque la función devuelva algo, si el precio por tonelada
+// convertido a dólares no es plausible, no se aplica. Un grano no vale USD 19.000/tn.
+const PRECIO_USD_MIN=20,PRECIO_USD_MAX=2000;
+function preciosPlausibles(p){
+  return['sojaUSD','maizUSD','trigoUSD'].every(k=>p[k]>=PRECIO_USD_MIN&&p[k]<=PRECIO_USD_MAX);
+}
 
 async function traerCotizaciones(fechaTablero){
   const objetivo=diaAnteriorISO(fechaTablero);
@@ -811,9 +817,11 @@ function CotizBar({cotiz,onRefresh}){
     btn);
 }
 
-function ParamsPanel({params,onChange,cotiz,onRefresh,onTc,onPrecio,precAuto}){
+function ParamsPanel({params,onChange,cotiz,onRefresh,onTc,onPrecio,precAuto,granosAuto}){
   const p=params.precios;
-  const pill=precAuto?h('span',{className:'pill-auto'},'auto'):h('span',{className:'pill-man'},'manual');
+  const pill=!precAuto?h('span',{className:'pill-man'},'manual')
+    :granosAuto?h('span',{className:'pill-auto'},'auto')
+    :h('span',{className:'pill-man'},'sin cargar');
   return h('div',{},
     h(CotizBar,{cotiz,onRefresh}),
     h('div',{className:'params-panel'},
@@ -833,7 +841,7 @@ function ParamsPanel({params,onChange,cotiz,onRefresh,onTc,onPrecio,precAuto}){
         h('span',{},'Soja: USD '+(p.sojaUSD||0)+'/tn'),
         h('span',{},'Maíz: USD '+(p.maizUSD||0)+'/tn'),
         h('span',{},'Trigo: USD '+(p.trigoUSD||0)+'/tn'),
-        precAuto
+        (precAuto&&granosAuto)
           ?h('span',{style:{color:'var(--green)',background:'var(--green-light)'}},'✅ Los precios se recalculan solos si cambiás el TC')
           :h('span',{style:{color:'var(--amber)',background:'var(--amber-light)'}},'✏ Precios editados a mano — no se recalculan con el TC'),
         h('span',{},'🗂 Las pestañas de meses se generan solas según los movimientos detectados')
@@ -1354,9 +1362,16 @@ function App(){
       const tc=(d.dolar&&d.dolar.ok&&d.dolar.valor)?num(d.dolar.valor):p.tc;
       let precios=p.precios;
       if(d.granos&&d.granos.ok&&tc>0){
-        setGranosARS({soja:d.granos.soja,maiz:d.granos.maiz,trigo:d.granos.trigo});
-        setPrecAuto(true);
-        precios={sojaUSD:r2(d.granos.soja/tc),maizUSD:r2(d.granos.maiz/tc),trigoUSD:r2(d.granos.trigo/tc)};
+        const cand={sojaUSD:r2(d.granos.soja/tc),maizUSD:r2(d.granos.maiz/tc),trigoUSD:r2(d.granos.trigo/tc)};
+        if(preciosPlausibles(cand)){
+          setGranosARS({soja:d.granos.soja,maiz:d.granos.maiz,trigo:d.granos.trigo});
+          setPrecAuto(true);precios=cand;
+        }else{
+          setGranosARS(null);
+          setCotiz(c=>({...c,granos:{...d.granos,ok:false},
+            errores:[...(c.errores||[]),'Los precios de pizarra recibidos no son plausibles ('+
+              Object.values(cand).map(v=>'USD '+v).join(' / ')+'): se descartaron, cargalos a mano.']}));
+        }
       }
       return{...p,fechaTablero:fecha,tc,precios};
     });
@@ -1434,7 +1449,7 @@ function App(){
         h('div',{className:'params-toggle-bar'},
           h('button',{className:'btn-toggle',onClick:()=>setShowParams(p=>!p)},showParams?'▲':'▼',' Parámetros del tablero ',h('span',{className:'params-badge'},'TC: $'+params.tc.toLocaleString('es-AR')))
         ),
-        showParams&&h(ParamsPanel,{params,onChange:setParams,cotiz,onRefresh:cargarCotiz,onTc:setTc,onPrecio:setPrecio,precAuto}),
+        showParams&&h(ParamsPanel,{params,onChange:setParams,cotiz,onRefresh:cargarCotiz,onTc:setTc,onPrecio:setPrecio,precAuto,granosAuto:!!granosARS}),
         h('div',{className:'process-row'},
           error&&h('div',{className:'error-msg'},error),
           h('button',{className:'btn btn-process',onClick:handleProcess,disabled:!allLoaded||loading},
