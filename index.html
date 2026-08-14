@@ -252,8 +252,19 @@ tbody td.dv-c-tot{background:rgba(224,238,255,.35)}
 .dv-legend{display:flex;flex-direction:column;gap:3px;margin-top:8px;padding:8px 12px;background:var(--gray-100);border-radius:var(--radius)}
 .dv-legend span{font-size:.7rem;color:var(--gray-600)}
 .dv-banner{background:var(--amber-light);border:1px solid #fcd34d;border-radius:var(--radius);color:var(--amber-dark);padding:9px 14px;font-size:.8rem;margin-bottom:14px}
-.dv-num{text-align:right;white-space:nowrap}
-@media print{.app-header,.header-actions,.toolbar,.filter-bar,.legend-bar,.app-footer,.btn,.search-wrap,.col-toggle-wrap,.params-mini-bar,.alert-strip,.dv-params,.dv-reset{display:none!important}.table-wrap,.seg-table-wrap,.dv-table-wrap{box-shadow:none;border:1px solid #ccc}}
+".dv-num{text-align:right;white-space:nowrap}
+.dv-table thead th.dv-c-quitar{width:38px;cursor:default;padding:9px 6px}
+td.dv-c-quitar{text-align:center;padding:6px 6px!important}
+.dv-quitar{background:none;border:1px solid transparent;color:var(--gray-400);cursor:pointer;font-size:.82rem;line-height:1;padding:3px 6px;border-radius:6px;font-family:var(--font-sans)}
+.dv-quitar:hover{color:var(--red);background:var(--red-light);border-color:#fca5a5}
+.dv-quitados{display:flex;align-items:center;gap:8px;flex-wrap:wrap;background:var(--gray-100);border:1px solid var(--gray-200);border-radius:var(--radius);padding:8px 12px;margin-bottom:10px;font-size:.75rem;color:var(--gray-600)}
+.dv-quitados b{color:var(--navy)}
+.chip-quitado{display:inline-flex;align-items:center;gap:5px;background:var(--white);border:1px solid var(--gray-200);border-radius:20px;padding:3px 5px 3px 10px;font-size:.72rem;color:var(--gray-800);font-family:var(--font-sans)}
+.chip-quitado button{background:var(--sky);border:none;color:var(--blue);cursor:pointer;border-radius:50%;width:18px;height:18px;font-size:.68rem;display:flex;align-items:center;justify-content:center;font-weight:700}
+.chip-quitado button:hover{background:var(--blue);color:#fff}
+.btn-restaurar{margin-left:auto;background:var(--white);border:1px solid var(--gray-200);border-radius:var(--radius);padding:4px 10px;font-size:.72rem;font-weight:600;cursor:pointer;color:var(--navy);font-family:var(--font-sans);white-space:nowrap}
+.btn-restaurar:hover{border-color:var(--blue);background:var(--sky)}
+@media print{.app-header,.header-actions,.toolbar,.filter-bar,.legend-bar,.app-footer,.btn,.search-wrap,.col-toggle-wrap,.params-mini-bar,.alert-strip,.dv-params,.dv-reset,.dv-c-quitar,.dv-quitados{display:none!important}.table-wrap,.seg-table-wrap,.dv-table-wrap{box-shadow:none;border:1px solid #ccc}}
 </style>
 </head>
 <body><div id="root"></div>
@@ -717,7 +728,8 @@ function dvRows(recs,corte,tcDV,precios,dvState){
       respaldo:(r?r.chqTotal:0)+(r?r.cttoTotal:0),
       comentarioAuto:auto,
       comentario:(st.comentario!==undefined&&st.comentario!==null)?st.comentario:auto,
-      editado:st.comentario!==undefined&&st.comentario!==null
+      editado:st.comentario!==undefined&&st.comentario!==null,
+      quitado:st.quitado===true          // sacado del reporte a mano
     });
   }
   return rows.sort((a,b)=>b.total-a.total);
@@ -1235,7 +1247,10 @@ function DeudaVencidaView({rows,corte,onCorte,tc,onTc,precios,dvState,onDvState,
   const[sortDir,setSortDir]=useState('desc');
   const[detail,setDetail]=useState(null);
 
-  let filtered=rows.filter(r=>!search||r.cliente.toLowerCase().includes(search.toLowerCase()));
+  // Los quitados a mano no se muestran ni suman. El buscador es aparte.
+  const visibles=rows.filter(r=>!r.quitado);
+  const quitados=Object.keys(dvState).filter(c=>dvState[c]&&dvState[c].quitado).sort();
+  let filtered=visibles.filter(r=>!search||r.cliente.toLowerCase().includes(search.toLowerCase()));
   filtered=[...filtered].sort((a,b)=>{
     if(sortKey==='cliente')return sortDir==='asc'?a.cliente.localeCompare(b.cliente):b.cliente.localeCompare(a.cliente);
     if(sortKey==='total')return sortDir==='asc'?a.total-b.total:b.total-a.total;
@@ -1252,6 +1267,9 @@ function DeudaVencidaView({rows,corte,onCorte,tc,onTc,precios,dvState,onDvState,
 
   const upd=(cliente,field,value)=>onDvState({...dvState,[cliente]:{...(dvState[cliente]||{}),[field]:value}});
   const resetCom=cliente=>{const st={...(dvState[cliente]||{})};delete st.comentario;onDvState({...dvState,[cliente]:st});};
+  const quitar=cliente=>upd(cliente,'quitado',true);
+  const devolver=cliente=>{const st={...(dvState[cliente]||{})};delete st.quitado;onDvState({...dvState,[cliente]:st});};
+  const restaurarTodos=()=>{const n={...dvState};quitados.forEach(c=>{const st={...(n[c]||{})};delete st.quitado;n[c]=st;});onDvState(n);};
 
   const corteD=parseISODate(corte);
 
@@ -1279,20 +1297,30 @@ function DeudaVencidaView({rows,corte,onCorte,tc,onTc,precios,dvState,onDvState,
       h('span',{},'🌱 Soja USD '+(precios.sojaUSD||0)+'/tn'),
       h('span',{},'🌽 Maíz USD '+(precios.maizUSD||0)+'/tn'),
       h('span',{},'🌾 Trigo USD '+(precios.trigoUSD||0)+'/tn'),
-      h('span',{},'📊 '+filtered.length+' clientes'),
+      h('span',{},'📊 '+(quitados.length?filtered.length+' de '+rows.length+' clientes · '+quitados.length+' quitado'+(quitados.length>1?'s':''):filtered.length+' clientes')),
       h('span',{},'🔎 Deuda vencida mín. USD '+DV_MIN_USD.toLocaleString('es-AR')),
+    ),
+    quitados.length>0&&h('div',{className:'dv-quitados'},
+      h('span',{},'🗑 ',h('b',{},quitados.length+(quitados.length>1?' clientes':' cliente')),' quitado'+(quitados.length>1?'s':'')+' del reporte:'),
+      quitados.map(c=>h('span',{className:'chip-quitado',key:c},c,
+        h('button',{title:'Devolver al reporte',onClick:()=>devolver(c)},'↩'))),
+      h('button',{className:'btn-restaurar',onClick:restaurarTodos},'Restaurar todos')
     ),
     h('div',{className:'dv-table-wrap'},
       h('table',{className:'dv-table'},
         h('thead',{},h('tr',{},
+          h('th',{className:'dv-c-quitar'},''),
           thS('cliente','Razón Social',''),
           thS('total','Part. Venc. en USD','dv-num dv-c-tot'),
           ...DV_BUCKETS.map((b,i)=>thS(i,b,'dv-num')),
           h('th',{style:{cursor:'default',textAlign:'left',minWidth:'300px'}},'Comentarios'),
         )),
         h('tbody',{},filtered.map(r=>h('tr',{key:r.cliente},
-          h('td',{},h('div',{className:'dv-cliente',onClick:()=>setDetail(r)},
-            h('span',{className:'cliente-name'},r.cliente),h('span',{className:'detail-btn'},'ver detalle'))),
+          h('td',{className:'dv-c-quitar'},
+            h('button',{className:'dv-quitar',title:'Quitar '+r.cliente+' del reporte',
+              onClick:()=>quitar(r.cliente)},'✕')),
+          h('td',{},h('div',{className:'dv-cliente',onClick:()=>setDetail(r),title:'Ver detalle'},
+            h('span',{className:'cliente-name'},r.cliente))),
           h('td',{className:'dv-num dv-c-tot'},fmtUSD(r.total)),
           ...r.buckets.map((v,i)=>h('td',{key:i,className:'dv-num'},fmtUSD(v,v<0))),
           h('td',{},h('div',{className:'dv-com-wrap'},
@@ -1304,6 +1332,7 @@ function DeudaVencidaView({rows,corte,onCorte,tc,onTc,precios,dvState,onDvState,
           ))
         ))),
         h('tfoot',{},h('tr',{className:'dv-totals'},
+          h('td',{},''),
           h('td',{},'TOTAL ('+filtered.length+' clientes)'),
           h('td',{className:'dv-num'},fmtUSD(tTot)),
           ...DV_BUCKETS.map((b,i)=>h('td',{key:i,className:'dv-num'},fmtUSD(tBal(i)))),
@@ -1315,6 +1344,7 @@ function DeudaVencidaView({rows,corte,onCorte,tc,onTc,precios,dvState,onDvState,
       h('span',{},'Muestra solo cuenta corriente con vencimiento a fecha de corte, inclusive. No incluye Pte de Facturar'+(sinNegocios?' (no se cargó el Excel de Negocios)':'')+'.'),
       h('span',{},'Los cheques y contratos NO se restan: se informan como respaldo en Comentarios, por su total, sin toparlos contra la deuda.'),
       h('span',{},'La suma de los cuatro baldes cierra contra Part. Venc. Solo se listan clientes con deuda vencida mayor a USD '+DV_MIN_USD.toLocaleString('es-AR')+'.'),
+      h('span',{},'El botón ✕ quita al cliente del reporte y la exportación a Excel refleja exactamente lo que se ve en pantalla.'),
       h('span',{},'Comentarios editables y guardados en este navegador. El botón ↺ vuelve al automático.'),
     ),
     detail&&h(DVDetailModal,{row:detail,onClose:()=>setDetail(null)})
@@ -1432,7 +1462,7 @@ function App(){
         result&&h('div',{className:'header-actions'},
           h('button',{className:'btn btn-ghost',onClick:()=>{setResult(null);setShowParams(true);setNavTab('tablero');}},'← Nueva consulta'),
           h('button',{className:'btn btn-ghost',onClick:()=>window.print()},'🖨 PDF'),
-          h('button',{className:'btn btn-primary',onClick:()=>exportToExcel(result.periods,params,obs,{rows:dvAll,corte:dvCorte,tc:dvTc})},'↓ Exportar Excel'),
+          h('button',{className:'btn btn-primary',onClick:()=>exportToExcel(result.periods,params,obs,{rows:dvAll.filter(r=>!r.quitado),corte:dvCorte,tc:dvTc})},'↓ Exportar Excel'),
         )
       )
     ),
