@@ -151,7 +151,7 @@ tbody .col-deuda{background:rgba(224,238,255,.4)}tbody .col-total{background:rgb
 .leg{font-size:.7rem;color:var(--gray-600)}.leg.red::before{content:'● ';color:var(--red)}.leg.green::before{content:'● ';color:var(--green)}
 /* SEGUIMIENTO */
 .seg-section{padding-top:32px}
-.alert-strip{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:20px}
+.alert-strip{display:grid;grid-template-columns:repeat(2,1fr);gap:12px;margin-bottom:20px}
 @media(max-width:700px){.alert-strip{grid-template-columns:1fr}}
 .alert-card{border-radius:var(--radius-lg);padding:14px 16px;display:flex;align-items:center;gap:12px;box-shadow:var(--shadow)}
 .alert-card.rojo{background:var(--red-light);border:1px solid #fca5a5}
@@ -1226,7 +1226,7 @@ function OverdueDetailModal({cliente,facturas,onClose}){
 // Seguimiento view
 const ESTADOS=['Pendiente contacto','Contactado','Comprometió pago','En disputa'];
 const ESTADO_CLASS={'Pendiente contacto':'estado-pendiente','Contactado':'estado-contactado','Comprometió pago':'estado-comprometido','En disputa':'estado-disputa'};
-const SEG_MIN_USD=1000;   // umbral mínimo de deuda para aparecer en Seguimiento de Cobranza
+const SEG_MIN_USD=100;   // saldo VENCIDO mínimo para entrar a Seguimiento de Cobranza
 
 function SeguimientoView({rows,diasVencidos,seguimiento,onSeguimientoChange}){
   const[search,setSearch]=useState('');
@@ -1239,8 +1239,12 @@ function SeguimientoView({rows,diasVencidos,seguimiento,onSeguimientoChange}){
 
   const today=new Date();today.setHours(0,0,0,0);
 
-  // Umbral: solo clientes con deuda >= USD 1.000. El semáforo sale de las facturas vencidas.
-  const enriched=rows.filter(r=>r.deuda>=SEG_MIN_USD).map(r=>{
+  // Esta sección gestiona cobranza de deuda VENCIDA: si un cliente no tiene nada
+  // vencido no hay qué gestionar, así que no entra. El umbral mide el saldo vencido.
+  const enriched=rows.filter(r=>{
+    const dv=diasVencidos[r.cliente];
+    return dv&&dv.saldoVencido>=SEG_MIN_USD;
+  }).map(r=>{
     const dv=diasVencidos[r.cliente];
     const dias=dv?dv.dias:0;
     const sem=getSemaforo(dv?dv.dias:-1);
@@ -1252,7 +1256,6 @@ function SeguimientoView({rows,diasVencidos,seguimiento,onSeguimientoChange}){
 
   const criticos=enriched.filter(r=>r.sem.color==='rojo').length;
   const porVencer=enriched.filter(r=>r.sem.color==='amarillo').length;
-  const alDia=enriched.filter(r=>r.sem.color==='verde').length;
 
   let filtered=enriched.filter(r=>{
     if(search&&!r.cliente.toLowerCase().includes(search.toLowerCase()))return false;
@@ -1280,13 +1283,11 @@ function SeguimientoView({rows,diasVencidos,seguimiento,onSeguimientoChange}){
         h('div',{},h('div',{className:'alert-count'},criticos),h('div',{className:'alert-label'},'Críticos — más de 30 días vencido'),h('div',{className:'alert-sub'},'Acción inmediata requerida'))),
       h('div',{className:'alert-card amarillo'},h('div',{className:'alert-icon'},'🟡'),
         h('div',{},h('div',{className:'alert-count'},porVencer),h('div',{className:'alert-label'},'Vencida reciente — 1 a 30 días'),h('div',{className:'alert-sub'},'Seguimiento activo'))),
-      h('div',{className:'alert-card verde'},h('div',{className:'alert-icon'},'🟢'),
-        h('div',{},h('div',{className:'alert-count'},alDia),h('div',{className:'alert-label'},'Al día — sin facturas vencidas'),h('div',{className:'alert-sub'},'Deuda ≥ USD '+SEG_MIN_USD.toLocaleString('es-AR')))),
     ),
     h('div',{className:'filter-bar',style:{marginBottom:'10px'}},
       h('span',{className:'filter-bar-title'},'Semáforo:'),
-      ['todos','rojo','amarillo','verde'].map(f=>h('button',{key:f,className:'filter-chip'+(filterSem===f?' active':''),onClick:()=>setFilterSem(f)},
-        {todos:'Todos',rojo:'🔴 Críticos',amarillo:'🟡 Vencida',verde:'🟢 Al día'}[f]
+      ['todos','rojo','amarillo'].map(f=>h('button',{key:f,className:'filter-chip'+(filterSem===f?' active':''),onClick:()=>setFilterSem(f)},
+        {todos:'Todos',rojo:'🔴 Críticos',amarillo:'🟡 Vencida'}[f]
       )),
       h('div',{className:'filter-sep'}),
       h('span',{className:'filter-bar-title'},'Estado:'),
@@ -1300,7 +1301,7 @@ function SeguimientoView({rows,diasVencidos,seguimiento,onSeguimientoChange}){
       )
     ),
     h('div',{className:'params-mini-bar'},
-      h('span',{},'📊 '+filtered.length+' clientes · Deuda mín USD '+SEG_MIN_USD.toLocaleString('es-AR')+' · Guardado automáticamente en este navegador')),
+      h('span',{},'📊 '+filtered.length+' clientes con deuda vencida · Saldo vencido mín. USD '+SEG_MIN_USD.toLocaleString('es-AR')+' · Guardado automáticamente en este navegador')),
     h('div',{className:'seg-table-wrap'},
       h('table',{className:'seg-table'},
         h('thead',{},h('tr',{},
