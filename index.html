@@ -757,7 +757,10 @@ function calcDeudaVencida(recCta,corte){
 }
 
 // Respaldo con el TC PROPIO de la sección. Los cheques NO se filtran por fecha de pago.
-function calcRespaldo(recChq,recCanje,tcDV,precios){
+// Los contratos SÍ: solo entran los que pueden cancelar lo que ya está vencido, es decir
+// los que entregan hasta el último día del mes del corte. Los de meses posteriores no
+// sirven para cobrar esta deuda; los de meses ya pasados sí, y por eso también entran.
+function calcRespaldo(recChq,recCanje,tcDV,precios,hastaEntrega){
   const out={};
   const ini=c=>{if(!out[c])out[c]={chqTotal:0,cheques:[],contratos:[],cttoTotal:0}};
   for(const r of recChq){                       // ya vienen filtrados por Medio Pago = "T"
@@ -767,6 +770,7 @@ function calcRespaldo(recChq,recCanje,tcDV,precios){
     out[r._c].cheques.push({numero:r.numero,fechaPago:r.fechaPago,importeARS:r.importeARS,usd});
   }
   for(const r of recCanje){
+    if(hastaEntrega&&r._d&&r._d>hastaEntrega)continue;   // entrega posterior al mes del corte
     let p=num(r.precioRaw);
     if(!p){
       const prod=r.producto||'';
@@ -800,7 +804,10 @@ function dvComentarioAuto(resp){
 function dvRows(recs,corte,tcDV,precios,dvState){
   if(!recs||!corte)return[];
   const deuda=calcDeudaVencida(recs.cta,corte);
-  const resp=calcRespaldo(recs.chq,recs.canje,tcDV,precios);
+  // Los contratos valen como respaldo hasta el fin del mes del corte, inclusive
+  const finMesCorte=new Date(corte.getFullYear(),corte.getMonth()+1,0);
+  const resp=calcRespaldo(recs.chq,recs.canje,tcDV,precios,finMesCorte);
+  const hastaLbl=finMesCorte.toLocaleDateString('es-AR');
   const rows=[];
   for(const c of Object.keys(deuda)){
     const d=deuda[c],r=resp[c]||null;
@@ -812,7 +819,7 @@ function dvRows(recs,corte,tcDV,precios,dvState){
       cheques:r?r.cheques:[],contratos:r?r.contratos:[],
       chqTotal:r?r.chqTotal:0,cttoTotal:r?r.cttoTotal:0,
       respaldo:(r?r.chqTotal:0)+(r?r.cttoTotal:0),
-      comentarioAuto:auto,
+      comentarioAuto:auto,hastaEntrega:hastaLbl,
       comentario:(st.comentario!==undefined&&st.comentario!==null)?st.comentario:auto,
       editado:st.comentario!==undefined&&st.comentario!==null,
       quitado:st.quitado===true          // sacado del reporte a mano
@@ -1402,7 +1409,10 @@ function DVDetailModal({row,onClose}){
           )
         ),
         h('div',{className:'modal-section'},
-          h('div',{className:'modal-section-title'},'🌾 Contratos de canje (',row.contratos.length,')'),
+          h('div',{className:'modal-section-title'},'🌾 Contratos de canje (',row.contratos.length,')',
+            row.hastaEntrega?h('span',{style:{fontWeight:500,textTransform:'none',letterSpacing:0,
+              color:'var(--gray-600)',fontSize:'.7rem',marginLeft:'6px'}},
+              '· entrega hasta el '+row.hastaEntrega):null),
           row.contratos.length===0?h('div',{className:'empty-section'},'Sin contratos de canje'):
           h('table',{className:'mini-table'},
             h('thead',{},h('tr',{},h('th',{style:{textAlign:'left'}},'Contrato'),h('th',{style:{textAlign:'left'}},'Producto'),
@@ -1525,6 +1535,7 @@ function DeudaVencidaView({rows,corte,onCorte,tc,onTc,precios,dvState,onDvState,
     h('div',{className:'dv-legend'},
       h('span',{},'Muestra solo cuenta corriente con vencimiento a fecha de corte, inclusive. No incluye Pte de Facturar'+(sinNegocios?' (no se cargó el Excel de Negocios)':'')+'.'),
       h('span',{},'Los cheques y contratos NO se restan: se informan como respaldo en Comentarios, por su total, sin toparlos contra la deuda.'),
+      h('span',{},'Solo se informan contratos con entrega hasta el fin del mes del corte: los de meses posteriores no cancelan lo vencido. Los de meses ya pasados sí se toman.'),
       h('span',{},'La suma de los cuatro baldes cierra contra Part. Venc. Solo se listan clientes con deuda vencida mayor a USD '+DV_MIN_USD.toLocaleString('es-AR')+'.'),
       h('span',{},'El botón ✕ quita al cliente del reporte y la exportación a Excel refleja exactamente lo que se ve en pantalla.'),
       h('span',{},'Comentarios editables y guardados en este navegador. El botón ↺ vuelve al automático.'),
