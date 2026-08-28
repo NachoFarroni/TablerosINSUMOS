@@ -783,7 +783,9 @@ function calcDeudaVencida(recCta,corte){
 }
 
 // Respaldo con el TC PROPIO de la sección. Los cheques NO se filtran por fecha de pago.
-function calcRespaldo(recChq,recCanje,tcDV,precios){
+// Los contratos de canje SÍ: uno con entrega más allá de 1 mes después del mes de corte
+// no cubre esta deuda ya vencida (va a aparecer como cobertura recién en su propio mes).
+function calcRespaldo(recChq,recCanje,tcDV,precios,corte){
   const out={};
   const ini=c=>{if(!out[c])out[c]={chqTotal:0,cheques:[],contratos:[],cttoTotal:0}};
   for(const r of recChq){                       // ya vienen filtrados por Medio Pago = "T"
@@ -792,7 +794,9 @@ function calcRespaldo(recChq,recCanje,tcDV,precios){
     ini(r._c);out[r._c].chqTotal+=usd;
     out[r._c].cheques.push({numero:r.numero,fechaPago:r.fechaPago,importeARS:r.importeARS,usd});
   }
+  const limiteCanje=corte?new Date(corte.getFullYear(),corte.getMonth()+2,0):null;
   for(const r of recCanje){
+    if(limiteCanje&&r._d&&r._d.getTime()>limiteCanje.getTime())continue;   // entrega demasiado lejana: no cubre esta deuda vencida
     let p=num(r.precioRaw);
     if(!p){
       const prod=r.producto||'';
@@ -826,7 +830,7 @@ function dvComentarioAuto(resp){
 function dvRows(recs,corte,tcDV,precios,dvState){
   if(!recs||!corte)return[];
   const deuda=calcDeudaVencida(recs.cta,corte);
-  const resp=calcRespaldo(recs.chq,recs.canje,tcDV,precios);
+  const resp=calcRespaldo(recs.chq,recs.canje,tcDV,precios,corte);
   const rows=[];
   for(const c of Object.keys(deuda)){
     const d=deuda[c],r=resp[c]||null;
