@@ -13,9 +13,7 @@
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
 :root{
   --navy:#0f2744;--navy-mid:#1a3a5c;--navy-light:#234872;
-  /* Azul de marca fyo — si te pasan el código exacto, cambialo solo acá */
-  --brand:#1B9DC9;--brand-dark:#10789e;--brand-soft:#e3f3fa;
-  --blue:#1B9DC9;--blue-light:#38b0d8;
+  --blue:#2563eb;--blue-light:#3b82f6;
   --sky:#e0eeff;--sky-dark:#bfdbfe;
   --white:#fff;--gray-50:#f8fafc;--gray-100:#f1f5f9;
   --gray-200:#e2e8f0;--gray-400:#94a3b8;--gray-600:#475569;--gray-800:#1e293b;
@@ -27,27 +25,24 @@
   --shadow-md:0 4px 12px rgba(0,0,0,.10);--shadow-lg:0 10px 30px rgba(0,0,0,.18);
 }
 html{font-size:15px}
-.data-table td,.data-table th,.seg-table td,.dv-table td,.cons td,.cons th,.sc-value,.msc-value,.mini-table td,.params-mini-bar span{font-variant-numeric:tabular-nums}
 body{font-family:var(--font-sans);background:var(--gray-50);color:var(--gray-800);line-height:1.5;-webkit-font-smoothing:antialiased}
 ::-webkit-scrollbar{width:6px;height:6px}::-webkit-scrollbar-track{background:var(--gray-100)}::-webkit-scrollbar-thumb{background:var(--gray-400);border-radius:3px}
 .app{display:flex;flex-direction:column;min-height:100vh}
 .app-main{flex:1;max-width:1500px;margin:0 auto;width:100%;padding:0 24px 48px}
-.app-header{background:var(--brand);border-bottom:3px solid var(--brand-dark);position:sticky;top:0;z-index:100;box-shadow:0 2px 12px rgba(0,0,0,.25)}
+.app-header{background:var(--navy);border-bottom:3px solid var(--blue);position:sticky;top:0;z-index:100;box-shadow:0 2px 12px rgba(0,0,0,.25)}
 .header-inner{max-width:1500px;margin:0 auto;padding:12px 24px;display:flex;align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap}
 .header-brand{display:flex;align-items:center;gap:12px;flex-shrink:0}
-.header-logo{display:flex;align-items:center}
-.brand-div{width:1px;height:26px;background:rgba(255,255,255,.28);flex-shrink:0}
-.logo-carga{display:flex;justify-content:center;margin-bottom:22px}
+.header-logo{width:38px;height:38px;background:var(--blue);border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:18px}
 .header-title{font-size:1.05rem;font-weight:700;color:var(--white);letter-spacing:-.02em}
-.header-sub{font-size:.7rem;color:rgba(255,255,255,.82);margin-top:1px}
-.header-nav{display:flex;gap:2px;background:rgba(255,255,255,.16);border-radius:10px;padding:3px}
-.nav-tab{display:inline-flex;align-items:center;gap:6px;background:none;border:none;cursor:pointer;font-family:var(--font-sans);font-size:.82rem;font-weight:600;color:rgba(255,255,255,.85);padding:7px 14px;border-radius:8px;transition:all .15s;white-space:nowrap}
-.nav-tab.active{background:var(--white);color:var(--brand-dark);box-shadow:0 1px 4px rgba(0,0,0,.15)}
-.nav-tab:hover:not(.active){background:rgba(255,255,255,.22);color:var(--white)}
+.header-sub{font-size:.7rem;color:var(--sky-dark);margin-top:1px}
+.header-nav{display:flex;gap:2px;background:rgba(255,255,255,.08);border-radius:10px;padding:3px}
+.nav-tab{background:none;border:none;cursor:pointer;font-family:var(--font-sans);font-size:.82rem;font-weight:600;color:rgba(255,255,255,.6);padding:7px 14px;border-radius:8px;transition:all .15s;white-space:nowrap}
+.nav-tab.active{background:var(--blue);color:var(--white);box-shadow:0 2px 8px rgba(37,99,235,.4)}
+.nav-tab:hover:not(.active){background:rgba(255,255,255,.12);color:var(--white)}
 .header-actions{display:flex;gap:8px;flex-wrap:wrap}
 .btn{display:inline-flex;align-items:center;gap:6px;padding:7px 14px;border-radius:var(--radius);font-family:var(--font-sans);font-size:.82rem;font-weight:600;cursor:pointer;border:none;transition:all .15s}
-.btn-primary{background:var(--navy);color:var(--white)}.btn-primary:hover{background:var(--navy-mid)}
-.btn-ghost{background:rgba(255,255,255,.18);color:var(--white);border:1px solid rgba(255,255,255,.3)}.btn-ghost:hover{background:rgba(255,255,255,.18)}
+.btn-primary{background:var(--blue);color:var(--white)}.btn-primary:hover{background:var(--blue-light)}
+.btn-ghost{background:rgba(255,255,255,.1);color:var(--white);border:1px solid rgba(255,255,255,.2)}.btn-ghost:hover{background:rgba(255,255,255,.18)}
 .btn-process{background:var(--navy);color:var(--white);padding:14px 36px;font-size:1rem;border-radius:10px;box-shadow:0 4px 14px rgba(37,99,235,.3);transition:all .2s}
 .btn-process:hover:not(:disabled){background:var(--navy-mid);transform:translateY(-1px)}
 .btn-process:disabled{background:var(--gray-400);cursor:not-allowed;box-shadow:none}
@@ -89,7 +84,7 @@ body{font-family:var(--font-sans);background:var(--gray-50);color:var(--gray-800
 .summary-strip{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:24px}
 @media(max-width:900px){.summary-strip{grid-template-columns:repeat(2,1fr)}}
 .summary-card{background:var(--white);border:1px solid var(--gray-200);border-radius:var(--radius-lg);padding:16px 18px;box-shadow:var(--shadow);border-top:3px solid var(--gray-200)}
-.summary-card.green{border-top-color:var(--brand)}.summary-card.navy{border-top-color:var(--navy);background:var(--navy)}.summary-card.red{border-top-color:var(--red)}
+.summary-card.green{border-top-color:var(--green)}.summary-card.navy{border-top-color:var(--navy);background:var(--navy)}.summary-card.red{border-top-color:var(--red)}
 .sc-label{font-size:.7rem;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--gray-600);margin-bottom:5px}
 .summary-card.navy .sc-label{color:var(--sky-dark)}
 .sc-value{font-family:var(--font-mono);font-size:1.15rem;font-weight:700;color:var(--navy)}
@@ -102,8 +97,8 @@ body{font-family:var(--font-sans);background:var(--gray-50);color:var(--gray-800
 .tabs{display:flex;background:var(--gray-100);border-radius:var(--radius);padding:3px;flex-wrap:wrap;gap:2px}
 .tab{background:none;border:none;cursor:pointer;font-family:var(--font-sans);font-size:.78rem;font-weight:600;color:var(--gray-600);padding:6px 10px;border-radius:6px;transition:all .15s;display:flex;align-items:center;gap:5px;white-space:nowrap}
 .tab.active{background:var(--white);color:var(--navy);box-shadow:var(--shadow)}
-.tab-badge{font-size:.65rem;background:var(--brand-soft);color:var(--brand-dark);padding:1px 5px;border-radius:20px;font-weight:700}
-.tab.active .tab-badge{background:var(--brand);color:var(--white)}
+.tab-badge{font-size:.65rem;background:var(--sky);color:var(--blue);padding:1px 5px;border-radius:20px;font-weight:700}
+.tab.active .tab-badge{background:var(--blue);color:var(--white)}
 .filter-bar{display:flex;gap:8px;margin-bottom:10px;flex-wrap:wrap;align-items:center;padding:10px 14px;background:var(--white);border:1px solid var(--gray-200);border-radius:var(--radius-lg);box-shadow:var(--shadow)}
 .filter-bar-title{font-size:.73rem;font-weight:700;color:var(--gray-600);text-transform:uppercase;letter-spacing:.05em;margin-right:4px}
 .filter-chip{display:inline-flex;align-items:center;gap:4px;padding:4px 10px;border-radius:20px;border:1px solid var(--gray-200);background:var(--gray-50);font-size:.73rem;font-weight:600;cursor:pointer;transition:all .15s;font-family:var(--font-sans);color:var(--gray-600)}
@@ -151,7 +146,7 @@ tbody .col-deuda{background:rgba(224,238,255,.4)}tbody .col-total{background:rgb
 .leg{font-size:.7rem;color:var(--gray-600)}.leg.red::before{content:'● ';color:var(--red)}.leg.green::before{content:'● ';color:var(--green)}
 /* SEGUIMIENTO */
 .seg-section{padding-top:32px}
-.alert-strip{display:grid;grid-template-columns:repeat(2,1fr);gap:12px;margin-bottom:20px}
+.alert-strip{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:20px}
 @media(max-width:700px){.alert-strip{grid-template-columns:1fr}}
 .alert-card{border-radius:var(--radius-lg);padding:14px 16px;display:flex;align-items:center;gap:12px;box-shadow:var(--shadow)}
 .alert-card.rojo{background:var(--red-light);border:1px solid #fca5a5}
@@ -215,90 +210,7 @@ tbody .col-deuda{background:rgba(224,238,255,.4)}tbody .col-total{background:rgb
 /* Seg detail modal */
 .seg-detail-modal{background:var(--white);border-radius:var(--radius-lg);box-shadow:var(--shadow-lg);width:100%;max-width:700px;overflow:hidden;animation:modalIn .2s ease}
 .app-footer{text-align:center;padding:13px;font-size:.7rem;color:var(--gray-400);border-top:1px solid var(--gray-200);background:var(--white)}
-/* CONSOLIDADO POR MES */
-.cons-wrap{overflow-x:auto;max-height:70vh;border-radius:0 0 var(--radius-lg) var(--radius-lg);box-shadow:var(--shadow-md);border:1px solid var(--gray-200);border-top:none}
-.cons{border-collapse:separate;border-spacing:0;font-size:.76rem;background:var(--white);min-width:100%}
-.cons thead th{background:var(--navy-light);color:#fff;font-size:.65rem;font-weight:700;text-transform:uppercase;letter-spacing:.05em;padding:8px 10px;white-space:nowrap;position:sticky;top:0;z-index:2;cursor:pointer;user-select:none}
-.cons thead th:hover{background:var(--navy-mid)}
-.cons th.c-cli,.cons td.c-cli{position:sticky;left:0;z-index:3;text-align:left;min-width:230px;max-width:230px;background:var(--white);border-right:2px solid var(--gray-200);font-family:var(--font-sans);color:var(--navy);font-weight:500;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.cons thead th.c-cli{background:var(--navy-light);color:#fff;z-index:4}
-.cons tbody td.c-cli{cursor:pointer}
-.cons tbody td.c-cli:hover{color:var(--blue);text-decoration:underline}
-.cons tbody tr:nth-child(even) td{background:var(--gray-50)}
-.cons tbody tr:nth-child(even) td.c-cli{background:#f4f7fb}
-.cons tbody tr:hover td{background:var(--sky)!important}
-.cons td{padding:6px 10px;border-bottom:1px solid var(--gray-100);font-family:var(--font-mono);text-align:right;white-space:nowrap}
-.cons .c-tot{background:rgba(224,238,255,.45)!important;font-weight:700;color:var(--navy);border-left:2px solid var(--gray-200)}
-.cons thead th.c-tot{background:#0a1f3d!important;color:#fff!important}
-.cons tfoot td{position:sticky;bottom:0;background:var(--navy)!important;color:#fff!important;font-family:var(--font-mono)!important;font-weight:700!important;padding:9px 10px!important;border-bottom:none!important;z-index:3}
-.cons tfoot td.c-cli{z-index:4;font-family:var(--font-sans)!important}
-.cons .cero{color:var(--gray-400)}
-.cons-bar{display:flex;align-items:center;gap:8px;flex-wrap:wrap;padding:10px 14px;background:var(--white);border:1px solid var(--gray-200);border-radius:var(--radius-lg);box-shadow:var(--shadow);margin-bottom:10px}
-.cons-bar-t{font-size:.72rem;font-weight:700;color:var(--gray-600);text-transform:uppercase;letter-spacing:.05em}
-.cons-hint{font-size:.6rem;font-weight:500;opacity:.85;text-transform:none;letter-spacing:0;display:block}
-/* COTIZACIONES AUTOMÁTICAS */
-.cot-bar{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:14px;padding:9px 13px;border-radius:var(--radius);font-size:.78rem;line-height:1.45}
-.cot-bar.ok{background:var(--green-light);border:1px solid #86efac;color:#14532d}
-.cot-bar.load{background:var(--sky);border:1px solid var(--sky-dark);color:var(--navy)}
-.cot-bar.warn{background:var(--amber-light);border:1px solid #fcd34d;color:var(--amber-dark)}
-.cot-bar b{font-weight:700}
-.cot-detail{font-family:var(--font-mono);font-size:.72rem;opacity:.85}
-.btn-cot{margin-left:auto;background:var(--white);border:1px solid var(--gray-200);border-radius:var(--radius);padding:4px 10px;font-size:.73rem;font-weight:600;cursor:pointer;color:var(--navy);font-family:var(--font-sans);white-space:nowrap}
-.btn-cot:hover{border-color:var(--blue);background:var(--sky)}
-.btn-cot:disabled{opacity:.5;cursor:not-allowed}
-.pill-auto{font-size:.62rem;font-weight:700;padding:1px 6px;border-radius:20px;background:var(--green-light);color:var(--green);border:1px solid #86efac;margin-left:6px}
-.pill-man{font-size:.62rem;font-weight:700;padding:1px 6px;border-radius:20px;background:var(--amber-light);color:var(--amber-dark);border:1px solid #fcd34d;margin-left:6px}
-/* DEUDA VENCIDA */
-.dv-section{padding-top:32px}
-.dv-params{display:flex;gap:16px;align-items:flex-start;flex-wrap:wrap;background:var(--white);border:1px solid var(--gray-200);border-radius:var(--radius-lg);padding:14px 18px;margin-bottom:12px;box-shadow:var(--shadow)}
-.dv-field{display:flex;flex-direction:column;gap:6px}
-.dv-field>span{font-size:.72rem;font-weight:700;color:var(--gray-600);text-transform:uppercase;letter-spacing:.05em}
-.dv-field input{border:1px solid var(--gray-200);border-radius:var(--radius);padding:7px 9px;font-family:var(--font-mono);font-size:.85rem;color:var(--navy);background:var(--gray-50);min-width:130px}
-.dv-field input:focus{outline:none;border-color:var(--blue);background:var(--white)}
-.dv-note{flex:1;min-width:270px;background:var(--amber-light);border:1px solid #fcd34d;border-radius:var(--radius);padding:9px 12px;font-size:.73rem;color:var(--amber-dark);line-height:1.5}
-.dv-note b{color:var(--amber-dark)}
-.dv-table-wrap{overflow-x:auto;border-radius:0 0 var(--radius-lg) var(--radius-lg);box-shadow:var(--shadow-md);border:1px solid var(--gray-200);border-top:none}
-.dv-table{width:100%;border-collapse:collapse;font-size:.78rem;background:var(--white)}
-.dv-table thead th{background:var(--navy-light);color:var(--white);font-size:.67rem;font-weight:700;text-transform:uppercase;letter-spacing:.06em;padding:9px 10px;white-space:nowrap;cursor:pointer;user-select:none}
-.dv-table thead th:hover{background:var(--navy-mid)}
-.dv-table thead th.dv-c-tot{background:#0a1f3d}
-.dv-table tbody td{padding:6px 10px;border-bottom:1px solid var(--gray-100);font-family:var(--font-mono);font-size:.77rem;vertical-align:middle}
-.dv-table tbody tr:nth-child(even){background:var(--gray-50)}
-.dv-table tbody tr:hover{background:var(--sky)!important}
-tbody td.dv-c-tot{background:rgba(224,238,255,.35)}
-.dv-cliente{font-family:var(--font-sans)!important;color:var(--navy);font-weight:500;cursor:pointer;display:flex;align-items:center;gap:5px;white-space:nowrap}
-.dv-cliente:hover .cliente-name{text-decoration:underline;color:var(--blue)}
-.dv-com-wrap{display:flex;align-items:center;gap:3px;min-width:280px}
-.dv-com{flex:1;border:1px solid transparent;background:transparent;font-family:var(--font-sans);font-size:.73rem;color:var(--gray-800);padding:3px 5px;border-radius:4px;min-width:0}
-.dv-com:focus{outline:none;border-color:var(--blue);background:var(--white)}
-.dv-com.edited{border-color:#fcd34d;background:var(--amber-light)}
-.dv-reset{background:none;border:none;cursor:pointer;color:var(--gray-400);font-size:.8rem;padding:1px 4px;border-radius:4px;flex-shrink:0}
-.dv-reset:hover{color:var(--blue);background:var(--sky)}
-.dv-totals td{background:var(--navy)!important;color:var(--white)!important;font-family:var(--font-mono)!important;font-weight:700!important;font-size:.77rem!important;padding:9px 10px!important;border-bottom:none!important;white-space:nowrap;font-style:normal!important}
-.dv-legend{display:flex;flex-direction:column;gap:3px;margin-top:8px;padding:8px 12px;background:var(--gray-100);border-radius:var(--radius)}
-.dv-legend span{font-size:.7rem;color:var(--gray-600)}
-.dv-banner{background:var(--amber-light);border:1px solid #fcd34d;border-radius:var(--radius);color:var(--amber-dark);padding:9px 14px;font-size:.8rem;margin-bottom:14px}
-".dv-num{text-align:right;white-space:nowrap}
-.dv-table thead th.dv-c-quitar{width:38px;cursor:default;padding:9px 6px}
-td.dv-c-quitar{text-align:center;padding:6px 6px!important}
-.dv-quitar{background:none;border:1px solid transparent;color:var(--gray-400);cursor:pointer;font-size:.82rem;line-height:1;padding:3px 6px;border-radius:6px;font-family:var(--font-sans)}
-.dv-quitar:hover{color:var(--red);background:var(--red-light);border-color:#fca5a5}
-.dv-quitados{display:flex;align-items:center;gap:8px;flex-wrap:wrap;background:var(--gray-100);border:1px solid var(--gray-200);border-radius:var(--radius);padding:8px 12px;margin-bottom:10px;font-size:.75rem;color:var(--gray-600)}
-.dv-quitados b{color:var(--navy)}
-.chip-quitado{display:inline-flex;align-items:center;gap:5px;background:var(--white);border:1px solid var(--gray-200);border-radius:20px;padding:3px 5px 3px 10px;font-size:.72rem;color:var(--gray-800);font-family:var(--font-sans)}
-.chip-quitado button{background:var(--sky);border:none;color:var(--blue);cursor:pointer;border-radius:50%;width:18px;height:18px;font-size:.68rem;display:flex;align-items:center;justify-content:center;font-weight:700}
-.chip-quitado button:hover{background:var(--blue);color:#fff}
-.btn-restaurar{margin-left:auto;background:var(--white);border:1px solid var(--gray-200);border-radius:var(--radius);padding:4px 10px;font-size:.72rem;font-weight:600;cursor:pointer;color:var(--navy);font-family:var(--font-sans);white-space:nowrap}
-.btn-restaurar:hover{border-color:var(--blue);background:var(--sky)}
-.print-head{display:none}
-@media print{
-  .print-head{display:flex!important;align-items:flex-end;justify-content:space-between;gap:20px;
-    padding:0 0 10px;margin-bottom:14px;border-bottom:2px solid var(--brand)}
-  .print-head .ph-tit{font-size:15pt;font-weight:800;color:var(--navy);letter-spacing:-.02em}
-  .print-head .ph-sub{font-size:8.5pt;color:#475569;margin-top:2px}
-  .print-head .ph-meta{font-size:8pt;color:#64748b;text-align:right;white-space:nowrap}
-  .app-main{padding-top:0!important}
-.app-header,.header-actions,.toolbar,.filter-bar,.legend-bar,.app-footer,.btn,.search-wrap,.col-toggle-wrap,.params-mini-bar,.alert-strip,.dv-params,.dv-reset,.dv-c-quitar,.dv-quitados,.detail-btn,.cons-bar{display:none!important}.table-wrap,.seg-table-wrap,.dv-table-wrap{box-shadow:none;border:1px solid #ccc}}
+@media print{.app-header,.header-actions,.toolbar,.filter-bar,.legend-bar,.app-footer,.btn,.search-wrap,.col-toggle-wrap,.params-mini-bar,.alert-strip{display:none!important}.table-wrap,.seg-table-wrap{box-shadow:none;border:1px solid #ccc}}
 </style>
 </head>
 <body><div id="root"></div>
@@ -346,71 +258,36 @@ function sheetToRows(wb){const ws=wb.Sheets[wb.SheetNames[0]];return XLSX.utils.
 function fmtUSD(v,signed=false){if(Math.abs(v)<0.005)return '—';const abs=Math.abs(v).toLocaleString('es-AR',{minimumFractionDigits:2,maximumFractionDigits:2});return(signed&&v<0?'-':'')+'$'+abs;}
 function fmtNum(v,dec=2){if(!v&&v!==0)return '—';return num(v).toLocaleString('es-AR',{minimumFractionDigits:dec,maximumFractionDigits:dec});}
 
+// DEDUP_MAP: solo para anomalías REALES que la normalización no puede resolver sola
+// (nombres truncados, duplicados de sufijo societario, alias comerciales distintos).
+// Todo lo demás (may/min, tildes, puntuación, "S.A." vs "SA" vs "S A" vs "SOCIEDAD ANONIMA",
+// espacios) lo resuelve normalizeClientName() automáticamente, para que no haya que
+// parchear cliente por cliente cada vez que aparece una variante nueva.
 const DEDUP_MAP={
-  'Agrotecnología y Servicios S.A.':'AGROTECNOLOGIA Y SERVICIOS SA',
-  'BAILLERES COMERCIAL S.A':'BAILLERES COMERCIAL SA','DS Hnos. SRL':'DS HNOS SRL',
-  'ESTANCIAS SAN AGUSTIN SOCIEDAD EN COMANDITA POR AC':'ESTANCIAS SAN AGUSTIN SCA',
-  'GANADERA LOS MOLLES S.A':'GANADERA LOS MOLLES S.A.','Gesagro S.A.':'GESAGRO SA','GESAGRO SA':'GESAGRO SA',
-  'HESAR HNOS S.A':'HESAR HNOS S.A.','Maiocco Cereales S.A.':'MAIOCCO CEREALES SA',
-  'M.C.M SOCIEDAD DE RESPONSABILIDAD LIMITADA':'M.C.M SRL','Plantaflor S.A.':'PLANTAFLOR SA',
-  'TOSQUITA CEREALES SOCIEDAD ANONIMA':'TOSQUITA CEREALES SA',
-  'ZANOY AGRO & SERVICIOS SOCIEDAD ANONIMA':'ZANOY AGRO & SERVICIOS SA',
-  'CEREALISTA MOLDES S A':'CEREALISTA MOLDES SA','ALDO RUFFINO AGROPECUARIA S. A.':'ALDO RUFFINO AGROPECUARIA SA',
-  'LOGRANDO AMIGOS S R L':'LOGRANDO AMIGOS SRL',
-  'AGROTECNICA COMERCIAL S.R.L. (AGROTECNICA COMERCIA':'AGROTECNICA COMERCIAL S.R.L.',
-  'TERRA VERDE AGRO INSUMOS SA SA':'TERRA VERDE AGRO INSUMOS SA','Terra Verde Agro Insumos SA':'TERRA VERDE AGRO INSUMOS SA',
+  'AGROTECNICA COMERCIAL SRL (AGROTECNICA COMERCIA':'AGROTECNICA COMERCIAL SRL', // nombre truncado en un archivo
+  'TERRA VERDE AGRO INSUMOS SA SA':'TERRA VERDE AGRO INSUMOS SA', // sufijo "SA" duplicado por error de carga
 };
-function canonical(n){const s=(n||'').toString().trim();return DEDUP_MAP[s]||s;}
 
-// ═══ COTIZACIONES ═══
-// El navegador no puede leer bna.com.ar ni cac.bcr.com.ar (esos sitios no habilitan
-// CORS). Por eso el tablero le pregunta a /api/cotizaciones, una función que corre en
-// el servidor de Vercel y sí puede leerlas. Si esa función no está publicada, se
-// intenta al menos el dólar contra una API pública con CORS.
-const COTIZ_API='/api/cotizaciones';
-const COTIZ_FALLBACK_USD='https://dolarapi.com/v1/dolares/mayorista';
+// Formas societarias completas → abreviatura, para unificar "SOCIEDAD ANONIMA" con "SA", etc.
+const LEGAL_FORMS=[
+  [/\bSOCIEDAD DE RESPONSABILIDAD LIMITADA\b/g,'SRL'],
+  [/\bSOCIEDAD EN COMANDITA POR ACCIONES\b/g,'SCA'],
+  [/\bSOCIEDAD EN COMANDITA POR AC\b/g,'SCA'],   // variante truncada vista en archivos reales
+  [/\bSOCIEDAD ANONIMA\b/g,'SA'],
+];
 
-function hoyISO(){
-  const d=new Date();
-  return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');
+function normalizeClientName(n){
+  let s=(n||'').toString().trim().toUpperCase();
+  s=s.normalize('NFD').replace(/[\u0300-\u036f]/g,'');   // saca tildes/diéresis
+  s=s.replace(/[.,]/g,'');                                // saca puntos y comas (S.A. → SA, Hnos. → Hnos)
+  s=s.replace(/\s+/g,' ').trim();
+  LEGAL_FORMS.forEach(([re,rep])=>{s=s.replace(re,rep);});
+  // Colapsa sufijos societarios escritos con espacios: "S A"→"SA", "S R L"→"SRL", "S C A"→"SCA"
+  s=s.replace(/\bS\s+A\b$/,'SA').replace(/\bS\s+R\s+L\b$/,'SRL').replace(/\bS\s+C\s+A\b$/,'SCA');
+  s=s.replace(/\s+/g,' ').trim();
+  return s;
 }
-function diaAnteriorISO(iso){
-  const d=parseISODate(iso)||new Date();
-  const a=new Date(d.getFullYear(),d.getMonth(),d.getDate()-1);
-  return a.getFullYear()+'-'+String(a.getMonth()+1).padStart(2,'0')+'-'+String(a.getDate()).padStart(2,'0');
-}
-function fmtFechaISO(iso){const d=parseISODate(iso);return d?d.toLocaleDateString('es-AR'):'—';}
-const r2=v=>Math.round(num(v)*100)/100;
-// Última línea de defensa: aunque la función devuelva algo, si el precio por tonelada
-// convertido a dólares no es plausible, no se aplica. Un grano no vale USD 19.000/tn.
-const PRECIO_USD_MIN=70,PRECIO_USD_MAX=900;   // rango realista de soja/maíz/trigo en USD por tonelada
-function preciosPlausibles(p){
-  return['sojaUSD','maizUSD','trigoUSD'].every(k=>p[k]>=PRECIO_USD_MIN&&p[k]<=PRECIO_USD_MAX);
-}
-
-async function traerCotizaciones(fechaTablero){
-  const objetivo=diaAnteriorISO(fechaTablero);
-  try{
-    const r=await fetch(COTIZ_API+'?fecha='+objetivo,{cache:'no-store'});
-    if(r.ok){
-      const j=await r.json();
-      if((j.dolar&&j.dolar.ok)||(j.granos&&j.granos.ok))return{...j,objetivo};
-    }
-  }catch(e){/* la función no está publicada o no respondió */}
-  // Respaldo: al menos el dólar, desde una API pública con CORS
-  try{
-    const r=await fetch(COTIZ_FALLBACK_USD,{cache:'no-store'});
-    if(r.ok){
-      const j=await r.json();
-      if(j&&j.venta)return{ok:false,objetivo,
-        dolar:{ok:true,valor:num(j.venta),fecha:(j.fechaActualizacion||'').slice(0,10)||null,fuente:'Mayorista (respaldo) — venta'},
-        granos:{ok:false},
-        errores:['No respondió /api/cotizaciones: los precios de pizarra hay que cargarlos a mano.']};
-    }
-  }catch(e){}
-  return{ok:false,objetivo,dolar:{ok:false},granos:{ok:false},
-    errores:['No se pudieron traer las cotizaciones automáticamente.']};
-}
+function canonical(n){const s=normalizeClientName(n);return DEDUP_MAP[s]||s;}
 
 // ═══ ENGINE ═══
 // Cada Excel se parsea UNA sola vez a registros normalizados y después se filtra por período.
@@ -533,9 +410,7 @@ function parseCanjes(wb,tc,precios){
     const tn=Math.max(0,(num(r[cE])-num(r[cL]))+num(r[cPe]));
     const total=pUSD*tn*1.105;
     out.push({_c:canonical(r[cC]),_d:parseDate(r[cF]),_m:total,
-      contrato:(cCtto>=0?r[cCtto]:'')||'',producto:prod,fechaEntrega:r[cF],precioUSD:pUSD,tn,total,
-      // crudos: Deuda Vencida revaloriza con SU propio TC
-      precioRaw:num(r[cP]),tnPend:num(r[cPe])});
+      contrato:(cCtto>=0?r[cCtto]:'')||'',producto:prod,fechaEntrega:r[cF],precioUSD:pUSD,tn,total});
   }
   return out;
 }
@@ -600,51 +475,15 @@ function periodDates(ym){
   return{s:new Date(y,m-1,1),e:new Date(y,m,0),label:new Date(y,m-1,1).toLocaleDateString('es-AR',{month:'long',year:'numeric'}).replace(/^\w/,c=>c.toUpperCase())};
 }
 
-const MESES_CORTOS=['Ene','Feb','Mar','Abr','May','Jun','Jul','Ago','Sep','Oct','Nov','Dic'];
-function mesCorto(ym){const[y,m]=ym.split('-');return MESES_CORTOS[+m-1]+" '"+y.slice(2);}
-// Importes sin centavos: con 13 columnas los decimales duplican el ancho sin aportar
-function fmtUSD0(v){if(Math.abs(v)<0.5)return '—';return (v<0?'-$':'$')+Math.abs(Math.round(v)).toLocaleString('es-AR');}
-const CONS_METRICAS=[{k:'deuda',l:'Deuda Total'},{k:'total',l:'Total General'},{k:'cta',l:'Cta Cte'},{k:'neg',l:'Pte de Facturar'}];
-// Filas de la grilla según la métrica elegida. La usan la vista y la exportación.
-function consFilas(cons,metrica,ocultarCeros){
-  if(!cons)return[];
-  let filas=cons.clientes.map(c=>{
-    const vals=c.cells.map(cell=>cell?num(cell[metrica]):0);
-    return{cliente:c.cliente,vals,tot:vals.reduce((a,b)=>a+b,0),cells:c.cells};
-  });
-  if(ocultarCeros)filas=filas.filter(f=>f.vals.some(v=>Math.abs(v)>=0.5));
-  return filas.sort((a,b)=>b.tot-a.tot);
-}
-
-// Junta todas las celdas de una fila del consolidado en un único detalle, para que
-// el modal muestre TODOS los períodos y su total coincida con el de la fila.
-function unirCeldas(cliente,cells){
-  const vivas=cells.filter(Boolean);
-  const suma=k=>vivas.reduce((a,c)=>a+num(c[k]),0);
-  const juntar=k=>{
-    const out=[];
-    vivas.forEach(c=>{(c.detail&&c.detail[k]||[]).forEach(x=>out.push(x));});
-    return out.sort((a,b)=>(a._d?a._d.getTime():Infinity)-(b._d?b._d.getTime():Infinity));
-  };
-  const det={facturas:juntar('facturas'),negocios:juntar('negocios'),
-             cheques:juntar('cheques'),canjes:juntar('canjes')};
-  const n=det.facturas.length+det.negocios.length+det.cheques.length+det.canjes.length;
-  return{cliente,cta:suma('cta'),neg:suma('neg'),deuda:suma('deuda'),
-    chq:suma('chq'),canje:suma('canje'),total:suma('total'),detail:det,
-    subtitulo:'Todos los períodos del consolidado · '+n+(n===1?' movimiento':' movimientos')};
-}
-
 const MAX_MESES_ADELANTE=24;   // tope de seguridad ante fechas basura muy futuras
 
 function processFiles(files,params){
   const{tc,precios,fechaTablero}=params;
   const hoy=new Date();hoy.setHours(0,0,0,0);
   const ref=parseISODate(fechaTablero)||hoy;
-  const sinNegocios=!files.negocios;   // el Excel de Negocios es OPCIONAL
-  return Promise.all([loadWB(files.ctaCte),loadWB(files.cheques),
-                      sinNegocios?Promise.resolve(null):loadWB(files.negocios),loadWB(files.canjes)])
+  return Promise.all([loadWB(files.ctaCte),loadWB(files.cheques),loadWB(files.negocios),loadWB(files.canjes)])
     .then(([wCta,wChq,wNeg,wCanje])=>{
-      const recCta=parseCta(wCta),recNeg=wNeg?parseNegocios(wNeg):[],
+      const recCta=parseCta(wCta),recNeg=parseNegocios(wNeg),
             recChq=parseCheques(wChq,tc),recCanje=parseCanjes(wCanje,tc,precios);
 
       const conDeuda=new Set();
@@ -662,30 +501,20 @@ function processFiles(files,params){
 
       const periods=[{key:'vencido',label:'Vencido a la fecha',s:null,e:ref}];
       keys.forEach(k=>{const p=periodDates(k);periods.push({key:k,label:p.label,s:p.s,e:p.e});});
-      const armar=p=>buildTable(agg(recCta,p.s,p.e),agg(recNeg,p.s,p.e),agg(recChq,p.s,p.e),agg(recCanje,p.s,p.e),conDeuda);
-      periods.forEach(p=>{p.rows=armar(p);});
 
-      // ── Vista consolidada ────────────────────────────────────────────────
-      // La PRIMERA columna es el mes corriente y absorbe todo lo vencido de antes:
-      // es todo vencimiento <= último día del mes corriente. Así no se superpone con
-      // nada y el total por cliente es la suma limpia de las columnas.
-      const finMesCorriente=new Date(ref.getFullYear(),ref.getMonth()+1,0);
-      const consCols=[{key:curKey,label:periodDates(curKey).label,corto:mesCorto(curKey),
-                       s:null,e:finMesCorriente,acum:true}];
-      keys.filter(k=>k>curKey).forEach(k=>{const p=periodDates(k);
-        consCols.push({key:k,label:p.label,corto:mesCorto(k),s:p.s,e:p.e,acum:false});});
-      const mapa=new Map();
-      consCols.forEach((c,i)=>{
-        armar(c).forEach(r=>{
-          if(!mapa.has(r.cliente))mapa.set(r.cliente,{cliente:r.cliente,cells:new Array(consCols.length).fill(null)});
-          mapa.get(r.cliente).cells[i]=r;
-        });
+      // Para la deuda "Vencido a la fecha", un contrato de canje solo cubre esa deuda si su
+      // entrega cae hasta 1 mes después del mes de referencia (ej.: deuda vencida en agosto →
+      // se toman contratos con entrega hasta agosto y, como mucho, septiembre). Un contrato con
+      // entrega más lejana (el año que viene, etc.) NO se contempla para cancelar deuda ya vencida:
+      // va a aparecer en la pestaña de su propio mes futuro, no acá.
+      const limiteCanjeVencido=new Date(ref.getFullYear(),ref.getMonth()+2,0);
+
+      periods.forEach(p=>{
+        const eCanje=p.key==='vencido'?limiteCanjeVencido:p.e;
+        p.rows=buildTable(agg(recCta,p.s,p.e),agg(recNeg,p.s,p.e),agg(recChq,p.s,p.e),agg(recCanje,p.s,eCanje),conDeuda);
       });
-      const consolidado={cols:consCols.map(c=>({key:c.key,label:c.label,corto:c.corto,acum:c.acum})),
-                         clientes:[...mapa.values()]};
 
-      return{periods,consolidado,diasVencidos:calcDiasVencidos(recCta,hoy),fechaRef:ref,
-             recs:{cta:recCta,chq:recChq,canje:recCanje},sinNegocios};
+      return{periods,diasVencidos:calcDiasVencidos(recCta,hoy),fechaRef:ref};
     });
 }
 
@@ -697,138 +526,7 @@ function getSemaforo(dias){
   return{color:'verde',label:'🟢 Al día'};
 }
 
-
-// ═══ DEUDA VENCIDA ═══
-// Reporte para niveles superiores. Solo cuenta corriente vencida a una fecha de corte propia.
-// El respaldo (cheques + contratos de canje) NO se resta: se informa como texto en Comentarios.
-const DV_STORAGE_KEY='tablero_deuda_vencida_v1';
-function loadDV(){try{const d=localStorage.getItem(DV_STORAGE_KEY);return d?JSON.parse(d):{}}catch(e){return{}}}
-function saveDV(d){try{localStorage.setItem(DV_STORAGE_KEY,JSON.stringify(d))}catch(e){}}
-
-// Baldes de antigüedad, sin solaparse: 0-30 / 31-60 / 61-90 / 91+
-const DV_BUCKETS=['0 - 30 días','30 - 60 días','60 - 90 días','+90 días'];
-const DV_MIN_USD=1000;   // por debajo de este importe el cliente no se muestra ni suma al total
-function dvBucket(dias){
-  if(dias<=30)return 0;
-  if(dias<=60)return 1;
-  if(dias<=90)return 2;
-  return 3;
-}
-
-// Día anterior a la fecha de corte — es el TC del BNA que hay que buscar a mano
-function dvDiaAnterior(corte){
-  if(!corte)return '';
-  const d=new Date(corte.getFullYear(),corte.getMonth(),corte.getDate()-1);
-  return d.toLocaleDateString('es-AR');
-}
-
-// Hasta el millón, en "mil usd" redondeado. De un millón en adelante, el número completo.
-function fmtMil(v){
-  const a=Math.abs(v);
-  if(a>=1000000)return Math.round(v).toLocaleString('es-AR')+' usd';
-  return Math.round(v/1000).toLocaleString('es-AR')+' mil usd';
-}
-
-// Leyenda del contrato, cruzando Precio con Tns Pendiente Entrega
-function dvEstadoCtto(precioRaw,tnPend){
-  const conPrecio=num(precioRaw)>0,pendEntrega=num(tnPend)>0;
-  if(!conPrecio&&pendEntrega)return 'pte de entrega y fijación';
-  if(!conPrecio&&!pendEntrega)return 'pte de fijación';
-  if(conPrecio&&pendEntrega)return 'pte de entrega';
-  return '';
-}
-
-// Deuda vencida por cliente: solo cta cte con vencimiento <= corte, inclusive.
-// Las notas de crédito vencidas netean dentro de su propio balde.
-function calcDeudaVencida(recCta,corte){
-  const out={};
-  for(const r of recCta){
-    if(!r._d||r._d>corte)continue;
-    if(Math.abs(r.saldo)<0.005)continue;
-    const dias=Math.floor((corte-r._d)/86400000);
-    const bi=dvBucket(dias);
-    if(!out[r._c])out[r._c]={total:0,buckets:[0,0,0,0],comprobantes:[]};
-    out[r._c].total+=r.saldo;
-    out[r._c].buckets[bi]+=r.saldo;
-    out[r._c].comprobantes.push({comprobante:r.comprobante,vencimiento:r.vencimiento,dias,bucket:bi,saldo:r.saldo});
-  }
-  for(const k in out)out[k].comprobantes.sort((a,b)=>b.dias-a.dias);   // de la más vencida a la menos
-  return out;
-}
-
-// Respaldo con el TC PROPIO de la sección. Los cheques NO se filtran por fecha de pago.
-// Los contratos SÍ: solo entran los que pueden cancelar lo que ya está vencido, es decir
-// los que entregan hasta el último día del mes del corte. Los de meses posteriores no
-// sirven para cobrar esta deuda; los de meses ya pasados sí, y por eso también entran.
-function calcRespaldo(recChq,recCanje,tcDV,precios,hastaEntrega){
-  const out={};
-  const ini=c=>{if(!out[c])out[c]={chqTotal:0,cheques:[],contratos:[],cttoTotal:0}};
-  for(const r of recChq){                       // ya vienen filtrados por Medio Pago = "T"
-    const usd=num(r.importeARS)/(tcDV||1);
-    if(Math.abs(usd)<0.005)continue;
-    ini(r._c);out[r._c].chqTotal+=usd;
-    out[r._c].cheques.push({numero:r.numero,fechaPago:r.fechaPago,importeARS:r.importeARS,usd});
-  }
-  for(const r of recCanje){
-    if(hastaEntrega&&r._d&&r._d>hastaEntrega)continue;   // entrega posterior al mes del corte
-    let p=num(r.precioRaw);
-    if(!p){
-      const prod=r.producto||'';
-      if(/soja/i.test(prod))p=precios.sojaUSD;
-      else if(/ma[íi]z/i.test(prod))p=precios.maizUSD;
-      else if(/trigo/i.test(prod))p=precios.trigoUSD;
-      else p=precios.sojaUSD;
-    } else if(p>1000){p=p/(tcDV||1);}
-    p=num(p);
-    const usd=p*r.tn*1.105;                     // misma fórmula ya documentada, en toneladas
-    if(Math.abs(usd)<0.005)continue;            // los contratos que valorizan en 0 no se listan
-    ini(r._c);out[r._c].cttoTotal+=usd;
-    out[r._c].contratos.push({contrato:r.contrato,producto:r.producto,tn:r.tn,
-      estado:dvEstadoCtto(r.precioRaw,r.tnPend),precioUSD:p,usd});
-  }
-  return out;
-}
-
-function dvComentarioAuto(resp){
-  if(!resp)return 'En gestión de cobranza';
-  const partes=[];
-  if(Math.abs(resp.chqTotal)>=0.005)partes.push('Cheques en cartera - '+fmtMil(resp.chqTotal));
-  resp.contratos.forEach(c=>{
-    const nro=(c.contrato||'').toString().trim();
-    partes.push('Ctto '+(nro||'s/n')+(c.estado?' '+c.estado:'')+' - '+fmtMil(c.usd));
-  });
-  return partes.length?partes.join(' / '):'En gestión de cobranza';
-}
-
-// Arma las filas del reporte. Se recalcula en vivo al mover la fecha de corte o el TC.
-function dvRows(recs,corte,tcDV,precios,dvState){
-  if(!recs||!corte)return[];
-  const deuda=calcDeudaVencida(recs.cta,corte);
-  // Los contratos valen como respaldo hasta el fin del mes del corte, inclusive
-  const finMesCorte=new Date(corte.getFullYear(),corte.getMonth()+1,0);
-  const resp=calcRespaldo(recs.chq,recs.canje,tcDV,precios,finMesCorte);
-  const hastaLbl=finMesCorte.toLocaleDateString('es-AR');
-  const rows=[];
-  for(const c of Object.keys(deuda)){
-    const d=deuda[c],r=resp[c]||null;
-    if(d.total<=DV_MIN_USD)continue;         // deuda vencida menor o igual a USD 1.000 → fuera del reporte
-    const st=dvState[c]||{};
-    const auto=dvComentarioAuto(r);
-    rows.push({
-      cliente:c,total:d.total,buckets:d.buckets,comprobantes:d.comprobantes,
-      cheques:r?r.cheques:[],contratos:r?r.contratos:[],
-      chqTotal:r?r.chqTotal:0,cttoTotal:r?r.cttoTotal:0,
-      respaldo:(r?r.chqTotal:0)+(r?r.cttoTotal:0),
-      comentarioAuto:auto,hastaEntrega:hastaLbl,
-      comentario:(st.comentario!==undefined&&st.comentario!==null)?st.comentario:auto,
-      editado:st.comentario!==undefined&&st.comentario!==null,
-      quitado:st.quitado===true          // sacado del reporte a mano
-    });
-  }
-  return rows.sort((a,b)=>b.total-a.total);
-}
-
-function exportToExcel(periods,params,obs,dv,cons){
+function exportToExcel(periods,params,obs){
   const wb=XLSX.utils.book_new();
   const hdr=['CLIENTE','CTA CTE USD','PTE FACTURAR USD','DEUDA TOTAL USD','CHEQUES USD','CANJES USD','TOTAL GENERAL USD','OBSERVACIONES'];
   const usados=new Set();
@@ -847,38 +545,8 @@ function exportToExcel(periods,params,obs,dv,cons){
     XLSX.utils.book_append_sheet(wb,ws,safeName(label));
   }
   periods.forEach(p=>{if(p.rows&&p.rows.length)mkSheet(p.rows,p.label);});
-
-  // Hoja del reporte de Deuda Vencida
-  if(dv&&dv.rows&&dv.rows.length){
-    const dh=['RAZ\u00d3N SOCIAL','PART. VENC. EN USD','0 - 30 D\u00cdAS','30 - 60 D\u00cdAS','60 - 90 D\u00cdAS','+90 D\u00cdAS','COMENTARIOS'];
-    const data=[dh];
-    dv.rows.forEach(r=>data.push([r.cliente,r.total||null,r.buckets[0]||null,r.buckets[1]||null,
-      r.buckets[2]||null,r.buckets[3]||null,r.comentario]));
-    const tt=dv.rows.reduce((a,r)=>a+(r.total||0),0);
-    const tb=i=>dv.rows.reduce((a,r)=>a+(r.buckets[i]||0),0);
-    data.push(['TOTAL ('+dv.rows.length+' clientes)',tt,tb(0),tb(1),tb(2),tb(3),'']);
-    const ws=XLSX.utils.aoa_to_sheet(data);
-    ws['!cols']=[{wch:45},{wch:16},{wch:14},{wch:14},{wch:14},{wch:14},{wch:60}];
-    XLSX.utils.book_append_sheet(wb,ws,safeName('Deuda Vencida'));
-  }
-
-  // Hoja del consolidado por mes
-  if(cons&&cons.filas&&cons.filas.length){
-    const hdr=['CLIENTE',...cons.cols.map(c=>c.acum?c.label.toUpperCase()+' (INCLUYE VENCIDO)':c.label.toUpperCase()),'TOTAL'];
-    const data=[hdr];
-    cons.filas.forEach(f=>data.push([f.cliente,...f.vals.map(v=>v||null),f.tot||null]));
-    const tc=i=>cons.filas.reduce((a,f)=>a+(f.vals[i]||0),0);
-    data.push(['TOTAL ('+cons.filas.length+' clientes)',...cons.cols.map((c,i)=>tc(i)),
-      cons.filas.reduce((a,f)=>a+f.tot,0)]);
-    const ws=XLSX.utils.aoa_to_sheet(data);
-    ws['!cols']=[{wch:45},...cons.cols.map(()=>({wch:16})),{wch:18}];
-    XLSX.utils.book_append_sheet(wb,ws,safeName('Consolidado'));
-  }
-
   const pd=[['Par\u00e1metro','Valor'],['Fecha del tablero',params.fechaTablero],['TC',params.tc],
     ['Soja USD/tn',params.precios.sojaUSD],['Ma\u00edz USD/tn',params.precios.maizUSD],['Trigo USD/tn',params.precios.trigoUSD]];
-  if(dv){pd.push(['Deuda Vencida \u2014 fecha de corte',dv.corte],['Deuda Vencida \u2014 TC Divisa Vend. BNA',dv.tc]);}
-  if(cons){pd.push(['Consolidado \u2014 m\u00e9trica',cons.metrica]);}
   XLSX.utils.book_append_sheet(wb,XLSX.utils.aoa_to_sheet(pd),'Par\u00e1metros');
   const out=XLSX.write(wb,{bookType:'xlsx',type:'array'});
   const url=URL.createObjectURL(new Blob([out],{type:'application/octet-stream'}));
@@ -887,26 +555,12 @@ function exportToExcel(periods,params,obs,dv,cons){
 }
 
 // ═══ REACT ═══
-const{useState,useRef,useCallback,useEffect,useMemo,createElement:h}=React;
-
-// ═══ MARCA ═══
-// Logo fyo redibujado en SVG para que el tablero siga siendo un solo archivo,
-// sin depender de ninguna imagen externa. Para reemplazarlo por el original,
-// cambiá SOLO el contenido de este componente.
-function LogoFyo({color='#ffffff',alto=26}){
-  return h('svg',{viewBox:'0 0 470 118',height:alto,role:'img','aria-label':'fyo acopio',
-      style:{display:'block',overflow:'visible'}},
-    h('text',{x:0,y:92,fontFamily:"Inter, 'Segoe UI', sans-serif",fontSize:104,
-      fontWeight:700,fill:color,letterSpacing:-4},'fyo'),
-    h('text',{x:170,y:92,fontFamily:"Inter, 'Segoe UI', sans-serif",fontSize:104,
-      fontWeight:300,fill:color,letterSpacing:-3},'acopio')
-  );
-}
+const{useState,useRef,useCallback,useEffect,createElement:h}=React;
 
 function CellNum({value,mode}){
   if(Math.abs(value)<0.005)return h('span',{className:'cell-zero'},'—');
   if(mode==='highlight')return h('span',{className:value>0?'cell-red':value<0?'cell-green':'cell-zero'},fmtUSD(value,value<0));
-  if(mode==='deuda')return h('span',{className:'cell-deuda'},fmtUSD(value,value<0));
+  if(mode==='deuda')return h('span',{className:'cell-deuda'},fmtUSD(value));
   return h('span',{},fmtUSD(value,value<0));
 }
 function DropZone({label,hint,file,onFile,icon}){
@@ -927,58 +581,29 @@ function SummaryCard({label,value,sub,accent}){
     sub&&h('div',{className:'sc-sub'},sub));
 }
 
-function CotizBar({cotiz,onRefresh}){
-  if(!cotiz)return null;
-  if(cotiz.estado==='cargando')
-    return h('div',{className:'cot-bar load'},h('span',{className:'spinner',style:{borderTopColor:'var(--navy)',borderColor:'rgba(15,39,68,.25)'}}),
-      ' Buscando el TC del BNA y la pizarra de la Cámara Arbitral…');
-  const d=cotiz.dolar||{},g=cotiz.granos||{};
-  const partes=[];
-  if(d.ok)partes.push('TC '+d.fuente+': $'+num(d.valor).toLocaleString('es-AR')+(d.fecha?' ('+fmtFechaISO(d.fecha)+')':''));
-  if(g.ok)partes.push('Pizarra: Soja $'+num(g.soja).toLocaleString('es-AR')+' · Maíz $'+num(g.maiz).toLocaleString('es-AR')+' · Trigo $'+num(g.trigo).toLocaleString('es-AR')+' ARS/tn'+(g.fecha?' ('+fmtFechaISO(g.fecha)+')':''));
-  const btn=h('button',{className:'btn-cot',onClick:onRefresh},'↻ Actualizar cotizaciones');
-  if(d.ok&&g.ok)
-    return h('div',{className:'cot-bar ok'},h('span',{},'✅'),
-      h('span',{},h('b',{},'Cotizaciones cargadas automáticamente. '),
-        h('span',{className:'cot-detail'},partes.join('  ·  '))),btn);
-  return h('div',{className:'cot-bar warn'},h('span',{},'⚠'),
-    h('span',{},h('b',{},(d.ok||g.ok)?'Carga automática parcial — completá a mano lo que falte. ':'No se pudieron cargar las cotizaciones — cargalas a mano. '),
-      h('span',{className:'cot-detail'},
-        (partes.length?partes.join('  ·  ')+'  ·  ':'')+
-        'Buscá los valores del '+fmtFechaISO(cotiz.objetivo)+' en bna.com.ar/Personas y cac.bcr.com.ar/es/precios-de-pizarra.'),
-      (cotiz.errores&&cotiz.errores.length)?h('div',{className:'cot-detail',style:{marginTop:'3px',opacity:.7}},cotiz.errores.join(' · ')):null),
-    btn);
-}
-
-function ParamsPanel({params,onChange,cotiz,onRefresh,onTc,onPrecio,precAuto,granosAuto}){
+function ParamsPanel({params,onChange}){
   const p=params.precios;
-  const pill=!precAuto?h('span',{className:'pill-man'},'manual')
-    :granosAuto?h('span',{className:'pill-auto'},'auto')
-    :h('span',{className:'pill-man'},'sin cargar');
-  return h('div',{},
-    h(CotizBar,{cotiz,onRefresh}),
-    h('div',{className:'params-panel'},
-      h('div',{className:'params-title'},h('span',{},'⚙'),' Parámetros del tablero'),
-      h('div',{className:'params-grid'},
-        h('label',{className:'param-group'},h('span',{},'Fecha del tablero'),
-          h('input',{type:'date',value:params.fechaTablero,onChange:e=>onChange({...params,fechaTablero:e.target.value})})),
-        h('label',{className:'param-group'},h('span',{},'TC Dólar Divisa Vendedor Nación'),
-          h('div',{className:'input-prefix'},h('span',{className:'pfx'},'$'),
-            h('input',{type:'number',step:'0.01',value:params.tc,onChange:e=>onTc(parseFloat(e.target.value)||0)}))),
-        ...['sojaUSD','maizUSD','trigoUSD'].map(g=>h('label',{className:'param-group',key:g},
-          h('span',{},{sojaUSD:'🌱 Soja — Pizarra BCR (USD/tn)',maizUSD:'🌽 Maíz — Pizarra BCR (USD/tn)',trigoUSD:'🌾 Trigo — Pizarra BCR (USD/tn)'}[g],pill),
-          h('div',{className:'input-prefix'},h('span',{className:'pfx'},'USD'),
-            h('input',{type:'number',step:'0.01',value:p[g]||'',onChange:e=>onPrecio(g,parseFloat(e.target.value)||0)}))))
-      ),
-      h('div',{className:'params-preview'},
-        h('span',{},'Soja: USD '+(p.sojaUSD||0)+'/tn'),
-        h('span',{},'Maíz: USD '+(p.maizUSD||0)+'/tn'),
-        h('span',{},'Trigo: USD '+(p.trigoUSD||0)+'/tn'),
-        (precAuto&&granosAuto)
-          ?h('span',{style:{color:'var(--green)',background:'var(--green-light)'}},'✅ Los precios se recalculan solos si cambiás el TC')
-          :h('span',{style:{color:'var(--amber)',background:'var(--amber-light)'}},'✏ Precios editados a mano — no se recalculan con el TC'),
-        h('span',{},'🗂 Las pestañas de meses se generan solas según los movimientos detectados')
-      )
+  const updP=(k,v)=>onChange({...params,precios:{...p,[k]:v}});
+  return h('div',{className:'params-panel'},
+    h('div',{className:'params-title'},h('span',{},'⚙'),' Parámetros del tablero'),
+    h('div',{className:'params-grid'},
+      h('label',{className:'param-group'},h('span',{},'Fecha del tablero'),
+        h('input',{type:'date',value:params.fechaTablero,onChange:e=>onChange({...params,fechaTablero:e.target.value})})),
+      h('label',{className:'param-group'},h('span',{},'TC Dólar Divisa Vendedor Nación'),
+        h('div',{className:'input-prefix'},h('span',{className:'pfx'},'$'),
+          h('input',{type:'number',step:'0.01',value:params.tc,onChange:e=>onChange({...params,tc:parseFloat(e.target.value)||0})}))),
+      // Grain prices in USD directly
+      ...['sojaUSD','maizUSD','trigoUSD'].map(g=>h('label',{className:'param-group',key:g},
+        h('span',{},{sojaUSD:'🌱 Soja — Pizarra BCR (USD/tn)',maizUSD:'🌽 Maíz — Pizarra BCR (USD/tn)',trigoUSD:'🌾 Trigo — Pizarra BCR (USD/tn)'}[g]),
+        h('div',{className:'input-prefix'},h('span',{className:'pfx'},'USD'),
+          h('input',{type:'number',step:'0.01',value:p[g]||'',onChange:e=>updP(g,parseFloat(e.target.value)||0)}))))
+    ),
+    h('div',{className:'params-preview'},
+      h('span',{},'Soja: USD '+(p.sojaUSD||0)+'/tn'),
+      h('span',{},'Maíz: USD '+(p.maizUSD||0)+'/tn'),
+      h('span',{},'Trigo: USD '+(p.trigoUSD||0)+'/tn'),
+      h('span',{style:{color:'var(--amber)',background:'var(--amber-light)'}},'⚠ Actualizar precios con pizarra CAC/BCR del día'),
+      h('span',{},'🗂 Las pestañas de meses se generan solas según los movimientos detectados')
     )
   );
 }
@@ -994,8 +619,7 @@ function DetailModal({row,onClose}){
   return h('div',{className:'modal-overlay',onClick:e=>{if(e.target===e.currentTarget)onClose();}},
     h('div',{className:'modal'},
       h('div',{className:'modal-header'},
-        h('div',{},h('div',{className:'modal-title'},row.cliente),
-          h('div',{className:'modal-sub'},row.subtitulo||'Detalle de composición de deuda')),
+        h('div',{},h('div',{className:'modal-title'},row.cliente),h('div',{className:'modal-sub'},'Detalle de composición de deuda')),
         h('button',{className:'modal-close',onClick:onClose},'✕')
       ),
       h('div',{className:'modal-body'},
@@ -1137,72 +761,6 @@ function DataTable({rows,search,filter,minDeuda,colVisible,obs,onObsChange,onDet
   );
 }
 
-
-// Vista consolidada: una fila por cliente, una columna por mes.
-function ConsolidadoView({cons,search,metrica,onMetrica,ceros,onCeros,onDetalle,fechaTablero}){
-  const[sortKey,setSortKey]=useState('tot');
-  const[sortDir,setSortDir]=useState('desc');
-  const cols=(cons&&cons.cols)||[];
-  let filas=consFilas(cons,metrica,ceros);
-  if(search)filas=filas.filter(f=>f.cliente.toLowerCase().includes(search.toLowerCase()));
-  filas=[...filas].sort((a,b)=>{
-    if(sortKey==='cliente')return sortDir==='asc'?a.cliente.localeCompare(b.cliente):b.cliente.localeCompare(a.cliente);
-    const va=sortKey==='tot'?a.tot:(a.vals[sortKey]||0), vb=sortKey==='tot'?b.tot:(b.vals[sortKey]||0);
-    return sortDir==='asc'?va-vb:vb-va;
-  });
-  const onSort=k=>{if(sortKey===k)setSortDir(d=>d==='asc'?'desc':'asc');else{setSortKey(k);setSortDir('desc');}};
-  const flecha=k=>h('span',{className:'sort-arrow'},sortKey===k?(sortDir==='asc'?'↑':'↓'):'↕');
-  const totCol=i=>filas.reduce((s,f)=>s+(f.vals[i]||0),0);
-  const totGen=filas.reduce((s,f)=>s+f.tot,0);
-  const metricaLbl=(CONS_METRICAS.find(m=>m.k===metrica)||{}).l||'';
-
-  if(!cols.length)return h('div',{className:'empty-table'},'Sin datos para consolidar');
-
-  return h('div',{},
-    h('div',{className:'cons-bar'},
-      h('span',{className:'cons-bar-t'},'Qué se muestra:'),
-      CONS_METRICAS.map(m=>h('button',{key:m.k,className:'filter-chip'+(metrica===m.k?' active':''),
-        onClick:()=>onMetrica(m.k)},m.l)),
-      h('div',{className:'filter-sep'}),
-      h('button',{className:'filter-chip'+(ceros?' active':''),onClick:()=>onCeros(!ceros)},'Ocultar clientes en cero'),
-      h('div',{className:'filter-sep'}),
-      h('span',{style:{fontSize:'.72rem',color:'var(--gray-600)'}},'Importes sin centavos')
-    ),
-    h('div',{className:'params-mini-bar'},
-      h('span',{},'📅 Tablero al '+fmtFechaISO(fechaTablero)),
-      h('span',{},'📊 '+filas.length+' clientes · '+cols.length+(cols.length===1?' columna':' columnas')),
-      h('span',{},'🧮 '+metricaLbl),
-      h('span',{},'💡 Clic en el cliente para ver su detalle'),
-    ),
-    h('div',{className:'cons-wrap'},
-      h('table',{className:'cons'},
-        h('thead',{},h('tr',{},
-          h('th',{className:'c-cli',onClick:()=>onSort('cliente')},'Cliente ',flecha('cliente')),
-          cols.map((c,i)=>h('th',{key:c.key,className:(c.acum?'c-hoy':''),onClick:()=>onSort(i)},
-            c.acum?c.label.replace(' de ',' '):c.corto,' ',flecha(i),
-            c.acum?h('span',{className:'cons-hint'},'vencido + el mes'):null)),
-          h('th',{className:'c-tot',onClick:()=>onSort('tot')},'Total ',flecha('tot')),
-        )),
-        h('tbody',{},filas.map(f=>h('tr',{key:f.cliente},
-          h('td',{className:'c-cli',title:f.cliente,onClick:()=>onDetalle(f)},f.cliente),
-          f.vals.map((v,i)=>h('td',{key:i,className:(cols[i].acum?'c-hoy':'')+(Math.abs(v)<0.5?' cero':'')},fmtUSD0(v))),
-          h('td',{className:'c-tot'},fmtUSD0(f.tot)),
-        ))),
-        h('tfoot',{},h('tr',{},
-          h('td',{className:'c-cli'},'TOTAL ('+filas.length+' clientes)'),
-          cols.map((c,i)=>h('td',{key:i},fmtUSD0(totCol(i)))),
-          h('td',{},fmtUSD0(totGen)),
-        ))
-      )
-    ),
-    h('div',{className:'legend-bar',style:{flexDirection:'column',alignItems:'flex-start',gap:'3px'}},
-      h('span',{className:'leg'},'La primera columna es el mes corriente e incluye TODO lo vencido de antes: es todo vencimiento hasta el último día de ese mes. Por eso el Total es la suma limpia de las columnas.'),
-      h('span',{className:'leg'},'El nombre del cliente queda fijo al desplazar en horizontal. Clic en el encabezado para ordenar.'),
-      h('span',{className:'leg'},'La exportación a Excel suma una hoja "Consolidado" con esta misma grilla.'),
-    )
-  );
-}
-
 // Seguimiento overdue detail modal
 function OverdueDetailModal({cliente,facturas,onClose}){
   useEffect(()=>{const esc=e=>{if(e.key==='Escape')onClose();};document.addEventListener('keydown',esc);return()=>document.removeEventListener('keydown',esc);},[onClose]);
@@ -1233,7 +791,7 @@ function OverdueDetailModal({cliente,facturas,onClose}){
 // Seguimiento view
 const ESTADOS=['Pendiente contacto','Contactado','Comprometió pago','En disputa'];
 const ESTADO_CLASS={'Pendiente contacto':'estado-pendiente','Contactado':'estado-contactado','Comprometió pago':'estado-comprometido','En disputa':'estado-disputa'};
-const SEG_MIN_USD=100;   // saldo VENCIDO mínimo para entrar a Seguimiento de Cobranza
+const SEG_MIN_USD=1000;   // umbral mínimo de deuda para aparecer en Seguimiento de Cobranza
 
 function SeguimientoView({rows,diasVencidos,seguimiento,onSeguimientoChange}){
   const[search,setSearch]=useState('');
@@ -1246,12 +804,8 @@ function SeguimientoView({rows,diasVencidos,seguimiento,onSeguimientoChange}){
 
   const today=new Date();today.setHours(0,0,0,0);
 
-  // Esta sección gestiona cobranza de deuda VENCIDA: si un cliente no tiene nada
-  // vencido no hay qué gestionar, así que no entra. El umbral mide el saldo vencido.
-  const enriched=rows.filter(r=>{
-    const dv=diasVencidos[r.cliente];
-    return dv&&dv.saldoVencido>=SEG_MIN_USD;
-  }).map(r=>{
+  // Umbral: solo clientes con deuda >= USD 1.000. El semáforo sale de las facturas vencidas.
+  const enriched=rows.filter(r=>r.deuda>=SEG_MIN_USD).map(r=>{
     const dv=diasVencidos[r.cliente];
     const dias=dv?dv.dias:0;
     const sem=getSemaforo(dv?dv.dias:-1);
@@ -1263,6 +817,7 @@ function SeguimientoView({rows,diasVencidos,seguimiento,onSeguimientoChange}){
 
   const criticos=enriched.filter(r=>r.sem.color==='rojo').length;
   const porVencer=enriched.filter(r=>r.sem.color==='amarillo').length;
+  const alDia=enriched.filter(r=>r.sem.color==='verde').length;
 
   let filtered=enriched.filter(r=>{
     if(search&&!r.cliente.toLowerCase().includes(search.toLowerCase()))return false;
@@ -1290,11 +845,13 @@ function SeguimientoView({rows,diasVencidos,seguimiento,onSeguimientoChange}){
         h('div',{},h('div',{className:'alert-count'},criticos),h('div',{className:'alert-label'},'Críticos — más de 30 días vencido'),h('div',{className:'alert-sub'},'Acción inmediata requerida'))),
       h('div',{className:'alert-card amarillo'},h('div',{className:'alert-icon'},'🟡'),
         h('div',{},h('div',{className:'alert-count'},porVencer),h('div',{className:'alert-label'},'Vencida reciente — 1 a 30 días'),h('div',{className:'alert-sub'},'Seguimiento activo'))),
+      h('div',{className:'alert-card verde'},h('div',{className:'alert-icon'},'🟢'),
+        h('div',{},h('div',{className:'alert-count'},alDia),h('div',{className:'alert-label'},'Al día — sin facturas vencidas'),h('div',{className:'alert-sub'},'Deuda ≥ USD '+SEG_MIN_USD.toLocaleString('es-AR')))),
     ),
     h('div',{className:'filter-bar',style:{marginBottom:'10px'}},
       h('span',{className:'filter-bar-title'},'Semáforo:'),
-      ['todos','rojo','amarillo'].map(f=>h('button',{key:f,className:'filter-chip'+(filterSem===f?' active':''),onClick:()=>setFilterSem(f)},
-        {todos:'Todos',rojo:'🔴 Críticos',amarillo:'🟡 Vencida'}[f]
+      ['todos','rojo','amarillo','verde'].map(f=>h('button',{key:f,className:'filter-chip'+(filterSem===f?' active':''),onClick:()=>setFilterSem(f)},
+        {todos:'Todos',rojo:'🔴 Críticos',amarillo:'🟡 Vencida',verde:'🟢 Al día'}[f]
       )),
       h('div',{className:'filter-sep'}),
       h('span',{className:'filter-bar-title'},'Estado:'),
@@ -1308,7 +865,7 @@ function SeguimientoView({rows,diasVencidos,seguimiento,onSeguimientoChange}){
       )
     ),
     h('div',{className:'params-mini-bar'},
-      h('span',{},'📊 '+filtered.length+' clientes con deuda vencida · Saldo vencido mín. USD '+SEG_MIN_USD.toLocaleString('es-AR')+' · Guardado automáticamente en este navegador')),
+      h('span',{},'📊 '+filtered.length+' clientes · Deuda mín USD '+SEG_MIN_USD.toLocaleString('es-AR')+' · Guardado automáticamente en este navegador')),
     h('div',{className:'seg-table-wrap'},
       h('table',{className:'seg-table'},
         h('thead',{},h('tr',{},
@@ -1359,202 +916,14 @@ function SeguimientoView({rows,diasVencidos,seguimiento,onSeguimientoChange}){
   );
 }
 
-
-// Modal de auditoría de Deuda Vencida
-function DVDetailModal({row,onClose}){
-  useEffect(()=>{const esc=e=>{if(e.key==='Escape')onClose();};document.addEventListener('keydown',esc);return()=>document.removeEventListener('keydown',esc);},[onClose]);
-  const card=(l,v,cls)=>h('div',{className:'modal-sum-card'},h('div',{className:'msc-label'},l),
-    h('div',{className:'msc-value'+(cls?' '+cls:'')},v));
-  return h('div',{className:'modal-overlay',onClick:e=>{if(e.target===e.currentTarget)onClose();}},
-    h('div',{className:'modal'},
-      h('div',{className:'modal-header'},
-        h('div',{},h('div',{className:'modal-title'},row.cliente),
-          h('div',{className:'modal-sub'},'Deuda vencida y respaldo — el respaldo NO se resta de la deuda')),
-        h('button',{className:'modal-close',onClick:onClose},'✕')
-      ),
-      h('div',{className:'modal-body'},
-        h('div',{className:'modal-summary'},
-          card('Part. Venc. USD',fmtUSD(row.total),'red'),
-          card('Cheques en cartera',row.chqTotal?fmtUSD(row.chqTotal):'—'),
-          card('Contratos de canje',row.cttoTotal?fmtUSD(row.cttoTotal):'—'),
-          card('Respaldo total',row.respaldo?fmtUSD(row.respaldo):'—'),
-        ),
-        h('div',{className:'modal-section'},
-          h('div',{className:'modal-section-title'},'📋 Comprobantes vencidos (',row.comprobantes.length,')'),
-          row.comprobantes.length===0?h('div',{className:'empty-section'},'Sin comprobantes vencidos a la fecha de corte'):
-          h('table',{className:'mini-table'},
-            h('thead',{},h('tr',{},h('th',{style:{textAlign:'left'}},'Comprobante'),h('th',{},'Vencimiento'),
-              h('th',{},'Días'),h('th',{},'Balde'),h('th',{},'Saldo USD'))),
-            h('tbody',{},row.comprobantes.map((c,i)=>h('tr',{key:i},
-              h('td',{},c.comprobante||'—'),h('td',{},fmtDate(c.vencimiento)),
-              h('td',{},h('span',{className:'dias-badge '+(c.dias>90?'rojo':c.dias>30?'amarillo':'verde')},c.dias)),
-              h('td',{},DV_BUCKETS[c.bucket]),
-              h('td',{className:c.saldo<0?'cell-green':'cell-red'},fmtUSD(c.saldo,c.saldo<0))
-            ))),
-            h('tfoot',{},h('tr',{},h('td',{},'TOTAL'),h('td',{},''),h('td',{},''),h('td',{},''),h('td',{},fmtUSD(row.total))))
-          )
-        ),
-        h('div',{className:'modal-section'},
-          h('div',{className:'modal-section-title'},'🏦 Cheques en cartera (tipo T) (',row.cheques.length,')'),
-          row.cheques.length===0?h('div',{className:'empty-section'},'Sin cheques en cartera'):
-          h('table',{className:'mini-table'},
-            h('thead',{},h('tr',{},h('th',{style:{textAlign:'left'}},'Nro Cheque'),h('th',{},'Fecha Pago'),
-              h('th',{},'Importe ARS'),h('th',{},'Importe USD'))),
-            h('tbody',{},row.cheques.map((c,i)=>h('tr',{key:i},
-              h('td',{},c.numero||'—'),h('td',{},fmtDate(c.fechaPago)),
-              h('td',{},'$'+num(c.importeARS).toLocaleString('es-AR',{minimumFractionDigits:2,maximumFractionDigits:2})),
-              h('td',{},fmtUSD(c.usd))
-            ))),
-            h('tfoot',{},h('tr',{},h('td',{},'TOTAL'),h('td',{},''),h('td',{},''),h('td',{},fmtUSD(row.chqTotal))))
-          )
-        ),
-        h('div',{className:'modal-section'},
-          h('div',{className:'modal-section-title'},'🌾 Contratos de canje (',row.contratos.length,')',
-            row.hastaEntrega?h('span',{style:{fontWeight:500,textTransform:'none',letterSpacing:0,
-              color:'var(--gray-600)',fontSize:'.7rem',marginLeft:'6px'}},
-              '· entrega hasta el '+row.hastaEntrega):null),
-          row.contratos.length===0?h('div',{className:'empty-section'},'Sin contratos de canje'):
-          h('table',{className:'mini-table'},
-            h('thead',{},h('tr',{},h('th',{style:{textAlign:'left'}},'Contrato'),h('th',{style:{textAlign:'left'}},'Producto'),
-              h('th',{style:{textAlign:'left'}},'Estado'),h('th',{},'USD/tn'),h('th',{},'Tn'),h('th',{},'Total USD'))),
-            h('tbody',{},row.contratos.map((c,i)=>h('tr',{key:i},
-              h('td',{},c.contrato||'—'),h('td',{style:{fontFamily:'var(--font-sans)'}},c.producto||'—'),
-              h('td',{style:{fontFamily:'var(--font-sans)'}},c.estado||'—'),
-              h('td',{},fmtUSD(c.precioUSD)),h('td',{},num(c.tn).toFixed(2)),h('td',{},fmtUSD(c.usd))
-            ))),
-            h('tfoot',{},h('tr',{},h('td',{},'TOTAL'),h('td',{},''),h('td',{},''),h('td',{},''),h('td',{},''),h('td',{},fmtUSD(row.cttoTotal))))
-          )
-        ),
-        h('div',{className:'dv-banner',style:{marginBottom:0,background:'var(--gray-50)',borderColor:'var(--gray-200)',color:'var(--gray-600)'}},
-          h('b',{},'Comentario automático: '),row.comentarioAuto)
-      )
-    )
-  );
-}
-
-// Vista Deuda Vencida
-function DeudaVencidaView({rows,corte,onCorte,tc,onTc,precios,dvState,onDvState,sinNegocios}){
-  const[search,setSearch]=useState('');
-  const[sortKey,setSortKey]=useState('total');
-  const[sortDir,setSortDir]=useState('desc');
-  const[detail,setDetail]=useState(null);
-
-  // Los quitados a mano no se muestran ni suman. El buscador es aparte.
-  const visibles=rows.filter(r=>!r.quitado);
-  const quitados=Object.keys(dvState).filter(c=>dvState[c]&&dvState[c].quitado).sort();
-  let filtered=visibles.filter(r=>!search||r.cliente.toLowerCase().includes(search.toLowerCase()));
-  filtered=[...filtered].sort((a,b)=>{
-    if(sortKey==='cliente')return sortDir==='asc'?a.cliente.localeCompare(b.cliente):b.cliente.localeCompare(a.cliente);
-    if(sortKey==='total')return sortDir==='asc'?a.total-b.total:b.total-a.total;
-    if(typeof sortKey==='number')return sortDir==='asc'?a.buckets[sortKey]-b.buckets[sortKey]:b.buckets[sortKey]-a.buckets[sortKey];
-    return 0;
-  });
-
-  const tTot=filtered.reduce((s,r)=>s+r.total,0);
-  const tBal=i=>filtered.reduce((s,r)=>s+r.buckets[i],0);
-
-  const onSort=k=>{if(sortKey===k)setSortDir(d=>d==='asc'?'desc':'asc');else{setSortKey(k);setSortDir('desc');}};
-  const thS=(k,label,cls='')=>h('th',{className:cls,onClick:()=>onSort(k)},label,' ',
-    h('span',{className:'sort-arrow'},sortKey===k?(sortDir==='asc'?'↑':'↓'):'↕'));
-
-  const upd=(cliente,field,value)=>onDvState({...dvState,[cliente]:{...(dvState[cliente]||{}),[field]:value}});
-  const resetCom=cliente=>{const st={...(dvState[cliente]||{})};delete st.comentario;onDvState({...dvState,[cliente]:st});};
-  const quitar=cliente=>upd(cliente,'quitado',true);
-  const devolver=cliente=>{const st={...(dvState[cliente]||{})};delete st.quitado;onDvState({...dvState,[cliente]:st});};
-  const restaurarTodos=()=>{const n={...dvState};quitados.forEach(c=>{const st={...(n[c]||{})};delete st.quitado;n[c]=st;});onDvState(n);};
-
-  const corteD=parseISODate(corte);
-
-  return h('div',{className:'dv-section'},
-    h('div',{className:'dv-params'},
-      h('label',{className:'dv-field'},h('span',{},'Fecha de corte'),
-        h('input',{type:'date',value:corte||'',onChange:e=>onCorte(e.target.value)})),
-      h('label',{className:'dv-field'},h('span',{},'TC Divisa Vend. BNA'),
-        h('div',{className:'input-prefix'},h('span',{className:'pfx'},'$'),
-          h('input',{type:'number',step:'0.01',value:tc,onChange:e=>onTc(parseFloat(e.target.value)||0),
-            style:{fontFamily:'var(--font-mono)',fontSize:'.85rem'}}))),
-      h('div',{className:'dv-note'},
-        '⚠ El TC se carga a mano: Divisa Vendedor BNA del día anterior al corte → ',
-        h('b',{},dvDiaAnterior(corteD)),
-        h('br'),
-        'Al mover la fecha de corte la deuda se recalcula sola, el TC no.'),
-      h('div',{className:'search-wrap',style:{marginLeft:'auto',alignSelf:'center'}},
-        h('span',{className:'search-icon'},'🔍'),
-        h('input',{type:'text',placeholder:'Buscar cliente…',value:search,onChange:e=>setSearch(e.target.value),className:'search-input'}),
-        search&&h('button',{className:'search-clear',onClick:()=>setSearch('')},'✕'))
-    ),
-    h('div',{className:'params-mini-bar'},
-      h('span',{},'📅 Corte '+(corteD?corteD.toLocaleDateString('es-AR'):'—')),
-      h('span',{},'💵 TC $'+num(tc).toLocaleString('es-AR')),
-      h('span',{},'🌱 Soja USD '+(precios.sojaUSD||0)+'/tn'),
-      h('span',{},'🌽 Maíz USD '+(precios.maizUSD||0)+'/tn'),
-      h('span',{},'🌾 Trigo USD '+(precios.trigoUSD||0)+'/tn'),
-      h('span',{},'📊 '+(quitados.length?filtered.length+' de '+rows.length+' clientes · '+quitados.length+' quitado'+(quitados.length>1?'s':''):filtered.length+' clientes')),
-      h('span',{},'🔎 Deuda vencida mín. USD '+DV_MIN_USD.toLocaleString('es-AR')),
-    ),
-    quitados.length>0&&h('div',{className:'dv-quitados'},
-      h('span',{},'🗑 ',h('b',{},quitados.length+(quitados.length>1?' clientes':' cliente')),' quitado'+(quitados.length>1?'s':'')+' del reporte:'),
-      quitados.map(c=>h('span',{className:'chip-quitado',key:c},c,
-        h('button',{title:'Devolver al reporte',onClick:()=>devolver(c)},'↩'))),
-      h('button',{className:'btn-restaurar',onClick:restaurarTodos},'Restaurar todos')
-    ),
-    h('div',{className:'dv-table-wrap'},
-      h('table',{className:'dv-table'},
-        h('thead',{},h('tr',{},
-          h('th',{className:'dv-c-quitar'},''),
-          thS('cliente','Razón Social',''),
-          thS('total','Part. Venc. en USD','dv-num dv-c-tot'),
-          ...DV_BUCKETS.map((b,i)=>thS(i,b,'dv-num')),
-          h('th',{style:{cursor:'default',textAlign:'left',minWidth:'300px'}},'Comentarios'),
-        )),
-        h('tbody',{},filtered.map(r=>h('tr',{key:r.cliente},
-          h('td',{className:'dv-c-quitar'},
-            h('button',{className:'dv-quitar',title:'Quitar '+r.cliente+' del reporte',
-              onClick:()=>quitar(r.cliente)},'✕')),
-          h('td',{},h('div',{className:'dv-cliente',onClick:()=>setDetail(r),title:'Ver detalle'},
-            h('span',{className:'cliente-name'},r.cliente))),
-          h('td',{className:'dv-num dv-c-tot'},fmtUSD(r.total)),
-          ...r.buckets.map((v,i)=>h('td',{key:i,className:'dv-num'},fmtUSD(v,v<0))),
-          h('td',{},h('div',{className:'dv-com-wrap'},
-            h('input',{className:'dv-com'+(r.editado?' edited':''),value:r.comentario,
-              title:r.comentario,
-              onChange:e=>upd(r.cliente,'comentario',e.target.value)}),
-            r.editado&&h('button',{className:'dv-reset',title:'Volver al comentario automático',
-              onClick:()=>resetCom(r.cliente)},'↺')
-          ))
-        ))),
-        h('tfoot',{},h('tr',{className:'dv-totals'},
-          h('td',{},''),
-          h('td',{},'TOTAL ('+filtered.length+' clientes)'),
-          h('td',{className:'dv-num'},fmtUSD(tTot)),
-          ...DV_BUCKETS.map((b,i)=>h('td',{key:i,className:'dv-num'},fmtUSD(tBal(i)))),
-          h('td',{},''),
-        ))
-      )
-    ),
-    h('div',{className:'dv-legend'},
-      h('span',{},'Muestra solo cuenta corriente con vencimiento a fecha de corte, inclusive. No incluye Pte de Facturar'+(sinNegocios?' (no se cargó el Excel de Negocios)':'')+'.'),
-      h('span',{},'Los cheques y contratos NO se restan: se informan como respaldo en Comentarios, por su total, sin toparlos contra la deuda.'),
-      h('span',{},'Solo se informan contratos con entrega hasta el fin del mes del corte: los de meses posteriores no cancelan lo vencido. Los de meses ya pasados sí se toman.'),
-      h('span',{},'La suma de los cuatro baldes cierra contra Part. Venc. Solo se listan clientes con deuda vencida mayor a USD '+DV_MIN_USD.toLocaleString('es-AR')+'.'),
-      h('span',{},'El botón ✕ quita al cliente del reporte y la exportación a Excel refleja exactamente lo que se ve en pantalla.'),
-      h('span',{},'Comentarios editables y guardados en este navegador. El botón ↺ vuelve al automático.'),
-    ),
-    detail&&h(DVDetailModal,{row:detail,onClose:()=>setDetail(null)})
-  );
-}
-
 // ═══ MAIN APP ═══
 function App(){
   const[files,setFiles]=useState({ctaCte:null,cheques:null,negocios:null,canjes:null});
   const[params,setParams]=useState({
-    fechaTablero:hoyISO(),   // siempre el día en que se entra al tablero
-    // Semilla de respaldo: se pisa apenas responden las cotizaciones automáticas
-    tc:1498.50,precios:{sojaUSD:340.83,maizUSD:186.98,trigoUSD:214.96}
+    fechaTablero:'2026-08-07',tc:1498.50,
+    // Pizarra BCR convertida a USD/tn (referencia 06/08/2026 — actualizar cada vez que se use)
+    precios:{sojaUSD:340.83,maizUSD:186.98,trigoUSD:214.96}
   });
-  const[cotiz,setCotiz]=useState({estado:'cargando',objetivo:diaAnteriorISO(hoyISO())});
-  const[granosARS,setGranosARS]=useState(null);   // pizarra cruda, para recalcular si cambia el TC
-  const[precAuto,setPrecAuto]=useState(true);     // false apenas el usuario toca un precio a mano
   const[result,setResult]=useState(null);
   const[loading,setLoading]=useState(false);
   const[error,setError]=useState(null);
@@ -1570,54 +939,45 @@ function App(){
   const[sortKey,setSortKey]=useState('total');
   const[sortDir,setSortDir]=useState('desc');
   const[seguimiento,setSeguimiento]=useState(()=>loadStorage());
-  // Deuda Vencida: fecha de corte y TC propios de la sección
-  const[consMetrica,setConsMetrica]=useState('deuda');
-  const[consCeros,setConsCeros]=useState(true);
-  const[dvState,setDvState]=useState(()=>loadDV());
-  const[dvCorte,setDvCorte]=useState(params.fechaTablero);
-  const[dvTc,setDvTc]=useState(params.tc);
-
-  // Al entrar (y al recargar) se piden solas: fecha de hoy, TC y pizarra del día anterior
-  const cargarCotiz=useCallback(async()=>{
-    const fecha=hoyISO();
-    setCotiz(c=>({...c,estado:'cargando',objetivo:diaAnteriorISO(fecha)}));
-    const d=await traerCotizaciones(fecha);
-    setCotiz({...d,estado:'listo'});
-    setParams(p=>{
-      const tc=(d.dolar&&d.dolar.ok&&d.dolar.valor)?num(d.dolar.valor):p.tc;
-      let precios=p.precios;
-      if(d.granos&&d.granos.ok&&tc>0){
-        const cand={sojaUSD:r2(d.granos.soja/tc),maizUSD:r2(d.granos.maiz/tc),trigoUSD:r2(d.granos.trigo/tc)};
-        if(preciosPlausibles(cand)){
-          setGranosARS({soja:d.granos.soja,maiz:d.granos.maiz,trigo:d.granos.trigo});
-          setPrecAuto(true);precios=cand;
-        }else{
-          setGranosARS(null);
-          setCotiz(c=>({...c,granos:{...d.granos,ok:false},
-            errores:[...(c.errores||[]),'Los precios de pizarra recibidos no son plausibles ('+
-              Object.values(cand).map(v=>'USD '+v).join(' / ')+'): se descartaron, cargalos a mano.']}));
-        }
-      }
-      return{...p,fechaTablero:fecha,tc,precios};
-    });
-  },[]);
-  useEffect(()=>{cargarCotiz();},[cargarCotiz]);
-
-  // Si se cambia el TC a mano y los precios siguen en automático, se revalorizan solos
-  const setTc=useCallback(v=>{
-    setParams(p=>{
-      const precios=(precAuto&&granosARS&&v>0)
-        ?{sojaUSD:r2(granosARS.soja/v),maizUSD:r2(granosARS.maiz/v),trigoUSD:r2(granosARS.trigo/v)}
-        :p.precios;
-      return{...p,tc:v,precios};
-    });
-  },[precAuto,granosARS]);
-  const setPrecio=useCallback((k,v)=>{setPrecAuto(false);setParams(p=>({...p,precios:{...p.precios,[k]:v}}));},[]);
 
   useEffect(()=>{saveStorage(seguimiento);},[seguimiento]);
-  useEffect(()=>{saveDV(dvState);},[dvState]);
 
-  const allLoaded=!!(files.ctaCte&&files.cheques&&files.canjes);   // Negocios es opcional
+  // ===== AUTO-CARGA (agregado): trae los 4 Excel ya filtrados desde /api/archivos/latest =====
+  // No reemplaza la carga manual: si falla o todavía no hay nada, los dropzones quedan
+  // vacíos y se sigue pudiendo arrastrar los archivos a mano exactamente como antes.
+  const[autoLoad,setAutoLoad]=useState({status:'loading',msg:''});
+  useEffect(()=>{
+    let activo=true;
+    (async()=>{
+      try{
+        const res=await fetch('/api/archivos/latest');
+        if(!res.ok)throw new Error('status '+res.status);
+        const data=await res.json();
+        const a=data.archivos||{};
+        const tipo='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet';
+        const toBlob=b64=>{
+          const bin=atob(b64);const bytes=new Uint8Array(bin.length);
+          for(let i=0;i<bin.length;i++)bytes[i]=bin.charCodeAt(i);
+          return new Blob([bytes],{type:tipo});
+        };
+        if(!activo)return;
+        setFiles({
+          ctaCte:a.cta_cte?toBlob(a.cta_cte.base64):null,
+          cheques:a.cheques?toBlob(a.cheques.base64):null,
+          negocios:a.negocios?toBlob(a.negocios.base64):null,
+          canjes:a.contratos?toBlob(a.contratos.base64):null,
+        });
+        setAutoLoad({status:'ok',msg:'✓ Archivos cargados automáticamente'+(data.fecha?(' ('+data.fecha+')'):'')});
+      }catch(e){
+        if(!activo)return;
+        setAutoLoad({status:'error',msg:'No se pudieron cargar los archivos automáticamente. Subilos a mano abajo, como siempre.'});
+      }
+    })();
+    return()=>{activo=false;};
+  },[]);
+  // ===== FIN AUTO-CARGA =====
+
+  const allLoaded=Object.values(files).every(Boolean);
 
   const handleProcess=useCallback(async()=>{
     if(!allLoaded)return;
@@ -1625,7 +985,6 @@ function App(){
     try{
       const data=await processFiles(files,params);
       setResult(data);setShowParams(false);setTab('vencido');setSearch('');setFilter('todos');setMinDeuda('');
-      setDvCorte(params.fechaTablero);setDvTc(params.tc);
     }catch(e){setError('Error procesando los archivos: '+e.message);}
     finally{setLoading(false);}
   },[files,params,allLoaded]);
@@ -1634,94 +993,54 @@ function App(){
 
   // Pestañas dinámicas: "Vencido a la fecha" + mes corriente + mes siguiente + meses posteriores con movimientos
   const periods=result?result.periods:[];
-  const esCons=tab==='consolidado';
-  const activePeriod=esCons?{label:'Consolidado',rows:[]}:(periods.find(p=>p.key===tab)||periods[0]||{label:'',rows:[]});
-  const currentRows=esCons?[]:(activePeriod.rows||[]);
-  const consData=result?result.consolidado:null;
-  const consExport=useMemo(()=>{
-    if(!consData)return null;
-    return{cols:consData.cols,filas:consFilas(consData,consMetrica,consCeros),
-           metrica:(CONS_METRICAS.find(m=>m.k===consMetrica)||{}).l||''};
-  },[consData,consMetrica,consCeros]);
+  const activePeriod=periods.find(p=>p.key===tab)||periods[0]||{label:'',rows:[]};
+  const currentRows=activePeriod.rows||[];
   const rowsVencido=(periods[0]||{rows:[]}).rows||[];
-
-  // Se recalcula sola al mover la fecha de corte o el TC — sin volver a cargar los Excel
-  const dvAll=useMemo(()=>result?dvRows(result.recs,parseISODate(dvCorte),dvTc,params.precios,dvState):[],
-    [result,dvCorte,dvTc,params.precios,dvState]);
 
   return h('div',{className:'app'},
     h('header',{className:'app-header'},
       h('div',{className:'header-inner'},
         h('div',{className:'header-brand'},
-          h('div',{className:'header-logo'},h(LogoFyo,{color:'#ffffff',alto:26})),
-          h('span',{className:'brand-div'}),
+          h('div',{className:'header-logo'},'📊'),
           h('div',{},h('div',{className:'header-title'},'Tablero de Deuda'),h('div',{className:'header-sub'},'Gestión de clientes · Vista integral'))
         ),
         result&&h('div',{className:'header-nav'},
           h('button',{className:'nav-tab'+(navTab==='tablero'?' active':''),onClick:()=>setNavTab('tablero')},'📊 Tablero'),
           h('button',{className:'nav-tab'+(navTab==='seguimiento'?' active':''),onClick:()=>setNavTab('seguimiento')},'🚨 Seguimiento de Cobranza'),
-          h('button',{className:'nav-tab'+(navTab==='deudavencida'?' active':''),onClick:()=>setNavTab('deudavencida')},'📅 Deuda Vencida'),
         ),
         result&&h('div',{className:'header-actions'},
           h('button',{className:'btn btn-ghost',onClick:()=>{setResult(null);setShowParams(true);setNavTab('tablero');}},'← Nueva consulta'),
           h('button',{className:'btn btn-ghost',onClick:()=>window.print()},'🖨 PDF'),
-          h('button',{className:'btn btn-primary',onClick:()=>exportToExcel(result.periods,params,obs,{rows:dvAll.filter(r=>!r.quitado),corte:dvCorte,tc:dvTc},consExport)},'↓ Exportar Excel'),
+          h('button',{className:'btn btn-primary',onClick:()=>exportToExcel(result.periods,params,obs)},'↓ Exportar Excel'),
         )
       )
     ),
 
-    result&&h('div',{className:'print-head'},
-      h('div',{style:{display:'flex',alignItems:'center',gap:'14px'}},
-        h(LogoFyo,{color:'#1B9DC9',alto:30}),
-        h('div',{},
-          h('div',{className:'ph-tit'},'Tablero de Deuda — Clientes'),
-          h('div',{className:'ph-sub'},
-            navTab==='seguimiento'?'Seguimiento de Cobranza'
-            :navTab==='deudavencida'?'Deuda Vencida'
-            :(esCons?'Consolidado por mes':activePeriod.label)))),
-      h('div',{className:'ph-meta'},
-        h('div',{},'Fecha del tablero: '+fmtFechaISO(params.fechaTablero)),
-        navTab==='deudavencida'?h('div',{},'Corte: '+fmtFechaISO(dvCorte)+' · TC $'+num(dvTc).toLocaleString('es-AR'))
-          :h('div',{},'TC $'+num(params.tc).toLocaleString('es-AR')),
-        h('div',{},'Emitido el '+new Date().toLocaleDateString('es-AR')))
-    ),
-
     h('main',{className:'app-main'},
       !result&&h('section',{className:'upload-section'},
-        h('div',{className:'logo-carga'},h(LogoFyo,{color:'var(--brand)',alto:44})),
         h('div',{className:'section-header'},h('h2',{},'Cargá los archivos'),h('p',{},'Arrastrá o hacé clic en cada zona para seleccionar el Excel correspondiente')),
+        h('div',{className:'error-msg',style:autoLoad.status==='ok'?{background:'#f0fdf4',border:'1px solid #86efac',color:'#16a34a',marginBottom:16}:autoLoad.status==='loading'?{background:'#eff6ff',border:'1px solid #93c5fd',color:'#2563eb',marginBottom:16}:{marginBottom:16}},
+          autoLoad.status==='loading'?'Buscando archivos automáticos…':autoLoad.msg),
         h('div',{className:'dropzones-grid'},
           h(DropZone,{label:'Cuenta Corriente Clientes',hint:'Cta_cte_clientes.xlsx',file:files.ctaCte,onFile:f=>setFiles(p=>({...p,ctaCte:f})),icon:'📋'}),
           h(DropZone,{label:'Cheques en Cartera',hint:'Cheques_en_cartera.xlsx',file:files.cheques,onFile:f=>setFiles(p=>({...p,cheques:f})),icon:'🏦'}),
-          h(DropZone,{label:'Negocios Ptes de Facturar (opcional)',hint:'Negocios_ptes_de_facturar.xlsx',file:files.negocios,onFile:f=>setFiles(p=>({...p,negocios:f})),icon:'📦'}),
+          h(DropZone,{label:'Negocios Pendientes de Facturar',hint:'Negocios_ptes_de_facturar.xlsx',file:files.negocios,onFile:f=>setFiles(p=>({...p,negocios:f})),icon:'📦'}),
           h(DropZone,{label:'Contratos Canje / FyO / Acopio',hint:'Reporte_Pos_Contratos.xlsx',file:files.canjes,onFile:f=>setFiles(p=>({...p,canjes:f})),icon:'🌾'}),
         ),
         h('div',{className:'params-toggle-bar'},
           h('button',{className:'btn-toggle',onClick:()=>setShowParams(p=>!p)},showParams?'▲':'▼',' Parámetros del tablero ',h('span',{className:'params-badge'},'TC: $'+params.tc.toLocaleString('es-AR')))
         ),
-        showParams&&h(ParamsPanel,{params,onChange:setParams,cotiz,onRefresh:cargarCotiz,onTc:setTc,onPrecio:setPrecio,precAuto,granosAuto:!!granosARS}),
+        showParams&&h(ParamsPanel,{params,onChange:setParams}),
         h('div',{className:'process-row'},
           error&&h('div',{className:'error-msg'},error),
           h('button',{className:'btn btn-process',onClick:handleProcess,disabled:!allLoaded||loading},
-            loading?h('span',{},h('span',{className:'spinner'}),' Procesando…'):!allLoaded?'Faltan archivos — cargá Cta Cte, Cheques y Canjes':'▶  Generar tablero'
+            loading?h('span',{},h('span',{className:'spinner'}),' Procesando…'):!allLoaded?'Faltan archivos — cargá los 4 Excel':'▶  Generar tablero'
           )
         )
       ),
 
       result&&navTab==='tablero'&&h('section',{className:'results-section'},
-        result.sinNegocios&&h('div',{className:'dv-banner'},
-          '⚠ No se cargó el Excel de Negocios Ptes de Facturar: la columna "Pte de Facturar" queda en cero en todas las pestañas. La sección Deuda Vencida no lo usa.'),
-        esCons?h('div',{className:'summary-strip',style:{gridTemplateColumns:'repeat(3,1fr)'}},
-          h(SummaryCard,{label:(consData&&consData.cols[0]?consData.cols[0].label:'Mes corriente')+' · con lo vencido',
-            value:(consExport?consExport.filas.reduce((a,f)=>a+(f.vals[0]||0),0):0),
-            sub:(consExport?consExport.filas.length:0)+' clientes'}),
-          h(SummaryCard,{label:'Meses siguientes',
-            value:(consExport?consExport.filas.reduce((a,f)=>a+f.vals.slice(1).reduce((x,y)=>x+y,0),0):0),
-            sub:Math.max(0,(consData?consData.cols.length:1)-1)+' meses',accent:'green'}),
-          h(SummaryCard,{label:'Total consolidado',
-            value:(consExport?consExport.filas.reduce((a,f)=>a+f.tot,0):0),
-            sub:(consExport?consExport.metrica:'')+' · suma de todas las columnas',accent:'navy'}),
-        ):h('div',{className:'summary-strip'},
+        h('div',{className:'summary-strip'},
           h(SummaryCard,{label:'Deuda total · '+activePeriod.label,value:sumCol(currentRows,'deuda'),sub:currentRows.length+' clientes'}),
           h(SummaryCard,{label:'Cheques en cartera',value:Math.abs(sumCol(currentRows,'chq')),sub:'Solo tipo T · por fecha de pago',accent:'green'}),
           h(SummaryCard,{label:'Contratos de canje',value:Math.abs(sumCol(currentRows,'canje')),sub:'Con IVA 10,5%',accent:'green'}),
@@ -1732,9 +1051,7 @@ function App(){
             h('div',{className:'tabs'},
               periods.map(p=>h('button',{key:p.key,className:'tab'+(tab===p.key?' active':''),
                 onClick:()=>{setTab(p.key);setSearch('');}},
-                p.label,h('span',{className:'tab-badge'},(p.rows||[]).length))),
-              h('button',{key:'consolidado',className:'tab'+(esCons?' active':''),
-                onClick:()=>{setTab('consolidado');setSearch('');}},'📊 Consolidado')
+                p.label,h('span',{className:'tab-badge'},(p.rows||[]).length)))
             ),
           ),
           h('div',{className:'toolbar-right'},
@@ -1746,7 +1063,7 @@ function App(){
             h(ColToggle,{visible:colVisible,onChange:setColVisible}),
           )
         ),
-        !esCons&&h('div',{className:'filter-bar'},
+        h('div',{className:'filter-bar'},
           h('span',{className:'filter-bar-title'},'Filtros:'),
           ['todos','conCheques','conCanjes','sinCobertura'].map(f=>h('button',{key:f,className:'filter-chip'+(filter===f?' active':''),onClick:()=>setFilter(f)},
             {todos:'Todos',conCheques:'Con cheques',conCanjes:'Con canjes',sinCobertura:'Sin cobertura'}[f]
@@ -1757,23 +1074,18 @@ function App(){
             minDeuda&&h('button',{className:'filter-chip',onClick:()=>setMinDeuda('')},'✕')
           )
         ),
-        !esCons&&h('div',{className:'params-mini-bar'},
-          h('span',{},'📅 Tablero al '+fmtFechaISO(params.fechaTablero)),
-          h('span',{},'💵 TC $'+params.tc.toLocaleString('es-AR')),
+        h('div',{className:'params-mini-bar'},
+          h('span',{},'📅 '+params.fechaTablero),h('span',{},'TC $'+params.tc.toLocaleString('es-AR')),
           h('span',{},'🌱 Soja USD '+(params.precios.sojaUSD||0)+'/tn'),
           h('span',{},'🌽 Maíz USD '+(params.precios.maizUSD||0)+'/tn'),
           h('span',{},'🌾 Trigo USD '+(params.precios.trigoUSD||0)+'/tn'),
         ),
-        esCons
-          ?h(ConsolidadoView,{cons:consData,search,metrica:consMetrica,onMetrica:setConsMetrica,
-              ceros:consCeros,onCeros:setConsCeros,fechaTablero:params.fechaTablero,
-              onDetalle:f=>{if(f.cells.some(Boolean))setDetailRow(unirCeldas(f.cliente,f.cells));}})
-          :h(DataTable,{
-            rows:currentRows,search,filter,minDeuda,colVisible,obs,
-            onObsChange:(c,v)=>setObs(o=>({...o,[c]:v})),
-            onDetail:setDetailRow,sortKey,sortDir,onSort:handleSort
-          }),
-        !esCons&&h('div',{className:'legend-bar'},
+        h(DataTable,{
+          rows:currentRows,search,filter,minDeuda,colVisible,obs,
+          onObsChange:(c,v)=>setObs(o=>({...o,[c]:v})),
+          onDetail:setDetailRow,sortKey,sortDir,onSort:handleSort
+        }),
+        h('div',{className:'legend-bar'},
           h('span',{className:'leg red'},'Rojo = deuda a cobrar'),h('span',{className:'leg green'},'Verde = saldo a favor'),
           h('span',{className:'leg'},'Clic en cliente para ver detalle · Cheques solo tipo "T", ubicados por fecha de pago · IVA Fert 10,5% · Agroquím 21% · Canjes 10,5% · Detalle ordenado del más vencido al más reciente'),
         )
@@ -1783,14 +1095,9 @@ function App(){
         rows:rowsVencido,diasVencidos:result.diasVencidos,
         seguimiento,onSeguimientoChange:setSeguimiento,
       }),
-
-      result&&navTab==='deudavencida'&&h(DeudaVencidaView,{
-        rows:dvAll,corte:dvCorte,onCorte:setDvCorte,tc:dvTc,onTc:setDvTc,
-        precios:params.precios,dvState,onDvState:setDvState,sinNegocios:result.sinNegocios,
-      }),
     ),
 
-    h('footer',{className:'app-footer'},'📍 Tablero de Deuda · fyo acopio · Procesamiento 100% local · Gestión de cobranza guardada en este navegador'),
+    h('footer',{className:'app-footer'},'📍 Tablero de Deuda · Procesamiento 100% local · Gestión de cobranza guardada en este navegador'),
     detailRow&&h(DetailModal,{row:detailRow,onClose:()=>setDetailRow(null)})
   );
 }
