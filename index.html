@@ -346,21 +346,36 @@ function sheetToRows(wb){const ws=wb.Sheets[wb.SheetNames[0]];return XLSX.utils.
 function fmtUSD(v,signed=false){if(Math.abs(v)<0.005)return '—';const abs=Math.abs(v).toLocaleString('es-AR',{minimumFractionDigits:2,maximumFractionDigits:2});return(signed&&v<0?'-':'')+'$'+abs;}
 function fmtNum(v,dec=2){if(!v&&v!==0)return '—';return num(v).toLocaleString('es-AR',{minimumFractionDigits:dec,maximumFractionDigits:dec});}
 
+// DEDUP_MAP: solo para anomalías REALES que la normalización no puede resolver sola
+// (nombres truncados, duplicados de sufijo societario, alias comerciales distintos).
+// Todo lo demás (may/min, tildes, puntuación, "S.A." vs "SA" vs "S A" vs "SOCIEDAD ANONIMA",
+// espacios) lo resuelve normalizeClientName() automáticamente, para que no haya que
+// parchear cliente por cliente cada vez que aparece una variante nueva.
 const DEDUP_MAP={
-  'Agrotecnología y Servicios S.A.':'AGROTECNOLOGIA Y SERVICIOS SA',
-  'BAILLERES COMERCIAL S.A':'BAILLERES COMERCIAL SA','DS Hnos. SRL':'DS HNOS SRL',
-  'ESTANCIAS SAN AGUSTIN SOCIEDAD EN COMANDITA POR AC':'ESTANCIAS SAN AGUSTIN SCA',
-  'GANADERA LOS MOLLES S.A':'GANADERA LOS MOLLES S.A.','Gesagro S.A.':'GESAGRO SA','GESAGRO SA':'GESAGRO SA',
-  'HESAR HNOS S.A':'HESAR HNOS S.A.','Maiocco Cereales S.A.':'MAIOCCO CEREALES SA',
-  'M.C.M SOCIEDAD DE RESPONSABILIDAD LIMITADA':'M.C.M SRL','Plantaflor S.A.':'PLANTAFLOR SA',
-  'TOSQUITA CEREALES SOCIEDAD ANONIMA':'TOSQUITA CEREALES SA',
-  'ZANOY AGRO & SERVICIOS SOCIEDAD ANONIMA':'ZANOY AGRO & SERVICIOS SA',
-  'CEREALISTA MOLDES S A':'CEREALISTA MOLDES SA','ALDO RUFFINO AGROPECUARIA S. A.':'ALDO RUFFINO AGROPECUARIA SA',
-  'LOGRANDO AMIGOS S R L':'LOGRANDO AMIGOS SRL',
-  'AGROTECNICA COMERCIAL S.R.L. (AGROTECNICA COMERCIA':'AGROTECNICA COMERCIAL S.R.L.',
-  'TERRA VERDE AGRO INSUMOS SA SA':'TERRA VERDE AGRO INSUMOS SA','Terra Verde Agro Insumos SA':'TERRA VERDE AGRO INSUMOS SA',
+  'AGROTECNICA COMERCIAL SRL (AGROTECNICA COMERCIA':'AGROTECNICA COMERCIAL SRL', // nombre truncado en un archivo
+  'TERRA VERDE AGRO INSUMOS SA SA':'TERRA VERDE AGRO INSUMOS SA', // sufijo "SA" duplicado por error de carga
 };
-function canonical(n){const s=(n||'').toString().trim();return DEDUP_MAP[s]||s;}
+
+// Formas societarias completas → abreviatura, para unificar "SOCIEDAD ANONIMA" con "SA", etc.
+const LEGAL_FORMS=[
+  [/\bSOCIEDAD DE RESPONSABILIDAD LIMITADA\b/g,'SRL'],
+  [/\bSOCIEDAD EN COMANDITA POR ACCIONES\b/g,'SCA'],
+  [/\bSOCIEDAD EN COMANDITA POR AC\b/g,'SCA'],   // variante truncada vista en archivos reales
+  [/\bSOCIEDAD ANONIMA\b/g,'SA'],
+];
+
+function normalizeClientName(n){
+  let s=(n||'').toString().trim().toUpperCase();
+  s=s.normalize('NFD').replace(/[\u0300-\u036f]/g,'');   // saca tildes/diéresis
+  s=s.replace(/[.,]/g,'');                                // saca puntos y comas (S.A. → SA, Hnos. → Hnos)
+  s=s.replace(/\s+/g,' ').trim();
+  LEGAL_FORMS.forEach(([re,rep])=>{s=s.replace(re,rep);});
+  // Colapsa sufijos societarios escritos con espacios: "S A"→"SA", "S R L"→"SRL", "S C A"→"SCA"
+  s=s.replace(/\bS\s+A\b$/,'SA').replace(/\bS\s+R\s+L\b$/,'SRL').replace(/\bS\s+C\s+A\b$/,'SCA');
+  s=s.replace(/\s+/g,' ').trim();
+  return s;
+}
+function canonical(n){const s=normalizeClientName(n);return DEDUP_MAP[s]||s;}
 
 // ═══ COTIZACIONES ═══
 // El navegador no puede leer bna.com.ar ni cac.bcr.com.ar (esos sitios no habilitan
@@ -662,7 +677,18 @@ function processFiles(files,params){
 
       const periods=[{key:'vencido',label:'Vencido a la fecha',s:null,e:ref}];
       keys.forEach(k=>{const p=periodDates(k);periods.push({key:k,label:p.label,s:p.s,e:p.e});});
-      const armar=p=>buildTable(agg(recCta,p.s,p.e),agg(recNeg,p.s,p.e),agg(recChq,p.s,p.e),agg(recCanje,p.s,p.e),conDeuda);
+      // Para cualquier vista "acumulada" (s:null → todo lo vencido hasta una fecha, sin piso),
+      // un contrato de canje solo cubre esa deuda si su entrega cae hasta 1 mes después del mes
+      // de referencia (ej.: deuda vencida en agosto → se toman contratos con entrega hasta agosto
+      // y, como mucho, septiembre). Un contrato con entrega más lejana (el año que viene, etc.)
+      // NO se contempla para cancelar deuda ya vencida: va a aparecer en la pestaña de su propio
+      // mes futuro, no acá. Aplica tanto a "Vencido a la fecha" como a la primera columna del
+      // consolidado (que también acumula todo lo vencido hasta el mes corriente).
+      const limiteCanjeVencido=new Date(ref.getFullYear(),ref.getMonth()+2,0);
+      const armar=p=>{
+        const eCanje=p.s===null?limiteCanjeVencido:p.e;
+        return buildTable(agg(recCta,p.s,p.e),agg(recNeg,p.s,p.e),agg(recChq,p.s,p.e),agg(recCanje,p.s,eCanje),conDeuda);
+      };
       periods.forEach(p=>{p.rows=armar(p);});
 
       // ── Vista consolidada ────────────────────────────────────────────────
@@ -1566,6 +1592,11 @@ function App(){
   const[dvCorte,setDvCorte]=useState(params.fechaTablero);
   const[dvTc,setDvTc]=useState(params.tc);
 
+  // Se pone en true cuando se auto-carga un tablero ya PUBLICADO (con su propio fechaTablero/
+  // TC/pizarra "congelados" al momento de publicar). Evita que la cotización automática del día
+  // de HOY (más abajo) pise esos valores históricos cuando alguien abre el link más tarde.
+  const publicadoRef=useRef(false);
+
   // Al entrar (y al recargar) se piden solas: fecha de hoy, TC y pizarra del día anterior
   const cargarCotiz=useCallback(async()=>{
     const fecha=hoyISO();
@@ -1573,6 +1604,7 @@ function App(){
     const d=await traerCotizaciones(fecha);
     setCotiz({...d,estado:'listo'});
     setParams(p=>{
+      if(publicadoRef.current)return p;   // ya hay un tablero publicado cargado: no pisar su TC/fecha
       const tc=(d.dolar&&d.dolar.ok&&d.dolar.valor)?num(d.dolar.valor):p.tc;
       let precios=p.precios;
       if(d.granos&&d.granos.ok&&tc>0){
@@ -1619,6 +1651,123 @@ function App(){
     finally{setLoading(false);}
   },[files,params,allLoaded]);
 
+  // ===== AUTO-CARGA (agregado): trae los archivos ya PUBLICADOS desde /api/archivos/latest =====
+  // No reemplaza la carga manual: si falla o todavía no hay nada publicado, los dropzones quedan
+  // vacíos y se sigue pudiendo arrastrar los archivos a mano exactamente como antes.
+  // Si llegan los archivos obligatorios (Cta Cte, Cheques, Canjes — Negocios sigue opcional),
+  // se auto-procesa el tablero sin esperar click en "Generar tablero": así quien solo entra a
+  // MIRAR (gerencia, comerciales) ve la vista ya armada apenas abre el link, sin tocar nada.
+  const[autoLoad,setAutoLoad]=useState({status:'loading',msg:''});
+  useEffect(()=>{
+    let activo=true;
+    (async()=>{
+      try{
+        const res=await fetch('/api/archivos/latest');
+        if(!res.ok)throw new Error('status '+res.status);
+        const data=await res.json();
+        const a=data.archivos||{};
+        const tipo='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet';
+        const toBlob=b64=>{
+          const bin=atob(b64);const bytes=new Uint8Array(bin.length);
+          for(let i=0;i<bin.length;i++)bytes[i]=bin.charCodeAt(i);
+          return new Blob([bytes],{type:tipo});
+        };
+        if(!activo)return;
+        const nuevosFiles={
+          ctaCte:a.cta_cte?toBlob(a.cta_cte.base64):null,
+          cheques:a.cheques?toBlob(a.cheques.base64):null,
+          negocios:a.negocios?toBlob(a.negocios.base64):null,
+          canjes:a.contratos?toBlob(a.contratos.base64):null,
+        };
+        setFiles(nuevosFiles);
+        // El TC y la pizarra de un tablero PUBLICADO son los que se usaron al generarlo (históricos),
+        // no los del día en que alguien lo abre — por eso pisan a la cotización automática de "hoy"
+        // y quedan protegidos por publicadoRef para que cargarCotiz no los vuelva a pisar después.
+        if(data.params){
+          publicadoRef.current=true;
+          setParams(p=>({...p,...data.params}));
+        }
+        setAutoLoad({status:'ok',msg:'✓ Tablero publicado cargado automáticamente'+(data.fecha?(' ('+data.fecha+')'):'')});
+
+        const listosParaProcesar=nuevosFiles.ctaCte&&nuevosFiles.cheques&&nuevosFiles.canjes;
+        if(listosParaProcesar){
+          setLoading(true);
+          try{
+            const nuevosParams=data.params?{...params,...data.params}:params;
+            const processed=await processFiles(nuevosFiles,nuevosParams);
+            if(!activo)return;
+            setResult(processed);setShowParams(false);
+            setDvCorte(nuevosParams.fechaTablero);setDvTc(nuevosParams.tc);
+          }catch(e){
+            if(activo)setError('Error procesando el tablero publicado: '+e.message);
+          }finally{
+            if(activo)setLoading(false);
+          }
+        }
+      }catch(e){
+        if(!activo)return;
+        setAutoLoad({status:'error',msg:'No hay ningún tablero publicado todavía. Subilos a mano abajo, como siempre.'});
+      }
+    })();
+    return()=>{activo=false;};
+  },[]);
+  // ===== FIN AUTO-CARGA =====
+
+  // ===== PUBLICAR (agregado): guarda los archivos + params ya usados en el backend compartido,
+  // para que quien abra el link SIN ser parte del equipo que sube archivos (gerencia, comerciales)
+  // vea este tablero ya armado apenas entra — sin cargar nada. Requiere la clave TABLERO_API_SECRET
+  // (se pide una sola vez y queda guardada en la sesión del navegador).
+  const[publishState,setPublishState]=useState({status:'idle',msg:''});
+  const fileToBase64=file=>new Promise((resolve,reject)=>{
+    const reader=new FileReader();
+    reader.onload=()=>resolve(reader.result.split(',')[1]);
+    reader.onerror=reject;
+    reader.readAsDataURL(file);
+  });
+  const handlePublicar=useCallback(async()=>{
+    if(!allLoaded||!result)return;
+    let secret=sessionStorage.getItem('tablero_publish_secret');
+    if(!secret){
+      secret=window.prompt('Clave para publicar (la misma configurada como TABLERO_API_SECRET en Vercel):');
+      if(!secret)return;
+    }
+    setPublishState({status:'loading',msg:'Publicando…'});
+    try{
+      const nombres={
+        cta_cte:['ctaCte','Cta_cte_clientes.xlsx'],
+        cheques:['cheques','Cheques_en_cartera.xlsx'],
+        negocios:['negocios','Negocios_ptes_de_facturar.xlsx'],
+        contratos:['canjes','Reporte_Pos_Contratos.xlsx'],
+      };
+      const archivos={};
+      for(const key in nombres){
+        const[fkey,defaultName]=nombres[key];
+        const file=files[fkey];
+        if(file)archivos[key]={nombre:file.name||defaultName,base64:await fileToBase64(file)};
+      }
+      const body={
+        fecha:params.fechaTablero,
+        archivos,
+        params:{fechaTablero:params.fechaTablero,tc:params.tc,precios:params.precios},
+      };
+      const res=await fetch('/api/archivos/update',{
+        method:'POST',
+        headers:{'Content-Type':'application/json','x-api-secret':secret},
+        body:JSON.stringify(body),
+      });
+      if(!res.ok){
+        if(res.status===401)sessionStorage.removeItem('tablero_publish_secret');
+        const err=await res.json().catch(()=>({}));
+        throw new Error(err.error||('status '+res.status));
+      }
+      sessionStorage.setItem('tablero_publish_secret',secret);
+      setPublishState({status:'ok',msg:'✓ Publicado — quien abra el link ahora ve este tablero, sin subir nada.'});
+    }catch(e){
+      setPublishState({status:'error',msg:'Error al publicar: '+e.message});
+    }
+  },[files,params,allLoaded,result]);
+  // ===== FIN PUBLICAR =====
+
   const handleSort=key=>{if(sortKey===key)setSortDir(d=>d==='asc'?'desc':'asc');else{setSortKey(key);setSortDir('desc');}};
 
   // Pestañas dinámicas: "Vencido a la fecha" + mes corriente + mes siguiente + meses posteriores con movimientos
@@ -1655,8 +1804,13 @@ function App(){
           h('button',{className:'btn btn-ghost',onClick:()=>{setResult(null);setShowParams(true);setNavTab('tablero');}},'← Nueva consulta'),
           h('button',{className:'btn btn-ghost',onClick:()=>window.print()},'🖨 PDF'),
           h('button',{className:'btn btn-primary',onClick:()=>exportToExcel(result.periods,params,obs,{rows:dvAll.filter(r=>!r.quitado),corte:dvCorte,tc:dvTc},consExport)},'↓ Exportar Excel'),
+          h('button',{className:'btn btn-primary',onClick:handlePublicar,disabled:publishState.status==='loading'},
+            publishState.status==='loading'?'Publicando…':'📤 Publicar para compartir'),
         )
-      )
+      ),
+      result&&publishState.status!=='idle'&&h('div',{className:'header-inner',style:{paddingTop:0,paddingBottom:8}},
+        h('div',{className:'error-msg',style:publishState.status==='ok'?{background:'#f0fdf4',border:'1px solid #86efac',color:'#16a34a'}:publishState.status==='loading'?{background:'#eff6ff',border:'1px solid #93c5fd',color:'#2563eb'}:{}},
+          publishState.msg))
     ),
 
     result&&h('div',{className:'print-head'},
