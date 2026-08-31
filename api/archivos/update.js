@@ -52,11 +52,18 @@ module.exports = async (req, res) => {
     return;
   }
 
-  await put(LATEST_KEY, JSON.stringify(data), {
-    access: 'private',
-    contentType: 'application/json',
-    allowOverwrite: true,
-  });
+  try {
+    await put(LATEST_KEY, JSON.stringify(data), {
+      access: 'private',
+      contentType: 'application/json',
+      allowOverwrite: true,
+    });
+  } catch (e) {
+    // Causa más común: el proyecto no tiene un Vercel Blob Storage conectado (o no
+    // se redeployó después de conectarlo), y falta la variable BLOB_READ_WRITE_TOKEN.
+    res.status(500).json({ error: 'Error al guardar en Blob: ' + (e && e.message ? e.message : String(e)) });
+    return;
+  }
 
   res.status(200).json({ ok: true, fecha: data.fecha });
 };
