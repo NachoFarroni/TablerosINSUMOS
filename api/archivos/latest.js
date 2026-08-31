@@ -8,7 +8,7 @@ const LATEST_KEY = 'tablero-deuda/archivos-latest.json';
 // por Vercel vía OIDC), no con un fetch directo a una URL pública.
 module.exports = async (req, res) => {
   try {
-    const result = await get(LATEST_KEY);
+    const result = await get(LATEST_KEY, { access: 'private' });
     if (!result || !result.stream) {
       res.status(404).json({ error: 'Todavía no hay ninguna corrida del ETL guardada.' });
       return;
