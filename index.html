@@ -789,7 +789,7 @@ function calcDeudaVencida(recCta,corte){
 // no cubre esta deuda ya vencida (va a aparecer como cobertura recién en su propio mes).
 function calcRespaldo(recChq,recCanje,tcDV,precios,corte){
   const out={};
-  const ini=c=>{if(!out[c])out[c]={chqTotal:0,cheques:[],contratos:[],cttoTotal:0}};
+  const ini=c=>{if(!out[c])out[c]={chqTotal:0,cheques:[],contratos:[],cttoTotal:0,fuera:[]}};
   for(const r of recChq){                       // ya vienen filtrados por Medio Pago = "T"
     const usd=num(r.importeARS)/(tcDV||1);
     if(Math.abs(usd)<0.005)continue;
@@ -798,7 +798,11 @@ function calcRespaldo(recChq,recCanje,tcDV,precios,corte){
   }
   const limiteCanje=corte?new Date(corte.getFullYear(),corte.getMonth()+2,0):null;
   for(const r of recCanje){
-    if(limiteCanje&&r._d&&r._d.getTime()>limiteCanje.getTime())continue;   // entrega demasiado lejana: no cubre esta deuda vencida
+    const base={contrato:r.contrato,producto:r.producto,tn:r.tn,fechaEntrega:r.fechaEntrega};
+    if(limiteCanje&&r._d&&r._d.getTime()>limiteCanje.getTime()){   // entrega demasiado lejana: no cubre esta deuda vencida
+      ini(r._c);out[r._c].fuera.push({...base,motivo:'entrega posterior al '+limiteCanje.toLocaleDateString('es-AR')});
+      continue;
+    }
     let p=num(r.precioRaw);
     if(!p){
       const prod=r.producto||'';
@@ -809,7 +813,11 @@ function calcRespaldo(recChq,recCanje,tcDV,precios,corte){
     } else if(p>1000){p=p/(tcDV||1);}
     p=num(p);
     const usd=p*r.tn*1.105;                     // misma fórmula ya documentada, en toneladas
-    if(Math.abs(usd)<0.005)continue;            // los contratos que valorizan en 0 no se listan
+    if(Math.abs(usd)<0.005){                    // los contratos que valorizan en 0 no se listan
+      ini(r._c);out[r._c].fuera.push({...base,
+        motivo:num(r.tn)?'precio en cero':'sin toneladas pendientes'});
+      continue;
+    }
     ini(r._c);out[r._c].cttoTotal+=usd;
     out[r._c].contratos.push({contrato:r.contrato,producto:r.producto,tn:r.tn,
       estado:dvEstadoCtto(r.precioRaw,r.tnPend),precioUSD:p,usd});
@@ -841,7 +849,7 @@ function dvRows(recs,corte,tcDV,precios,dvState){
     const auto=dvComentarioAuto(r);
     rows.push({
       cliente:c,total:d.total,buckets:d.buckets,comprobantes:d.comprobantes,
-      cheques:r?r.cheques:[],contratos:r?r.contratos:[],
+      cheques:r?r.cheques:[],contratos:r?r.contratos:[],cttosFuera:r?r.fuera:[],
       chqTotal:r?r.chqTotal:0,cttoTotal:r?r.cttoTotal:0,
       respaldo:(r?r.chqTotal:0)+(r?r.cttoTotal:0),
       comentarioAuto:auto,
@@ -1445,7 +1453,22 @@ function DVDetailModal({row,onClose}){
               h('td',{},fmtUSD(c.precioUSD)),h('td',{},num(c.tn).toFixed(2)),h('td',{},fmtUSD(c.usd))
             ))),
             h('tfoot',{},h('tr',{},h('td',{},'TOTAL'),h('td',{},''),h('td',{},''),h('td',{},''),h('td',{},''),h('td',{},fmtUSD(row.cttoTotal))))
-          )
+          ),
+          (row.cttosFuera&&row.cttosFuera.length)?h('div',{style:{marginTop:'10px'}},
+            h('div',{style:{fontSize:'.72rem',fontWeight:700,color:'var(--gray-600)',marginBottom:'4px'}},
+              'No computados ('+row.cttosFuera.length+') — por qué este cliente no muestra ese contrato'),
+            h('table',{className:'mini-table',style:{opacity:.75}},
+              h('thead',{},h('tr',{},h('th',{style:{textAlign:'left'}},'Contrato'),
+                h('th',{style:{textAlign:'left'}},'Producto'),h('th',{},'Fecha entrega'),
+                h('th',{},'Tn'),h('th',{style:{textAlign:'left'}},'Motivo'))),
+              h('tbody',{},row.cttosFuera.map((c,i)=>h('tr',{key:i},
+                h('td',{},c.contrato||'—'),
+                h('td',{style:{fontFamily:'var(--font-sans)'}},c.producto||'—'),
+                h('td',{},fmtDate(c.fechaEntrega)),h('td',{},num(c.tn).toFixed(2)),
+                h('td',{style:{fontFamily:'var(--font-sans)',color:'var(--amber-dark)'}},c.motivo)
+              )))
+            )
+          ):null
         ),
         h('div',{className:'dv-banner',style:{marginBottom:0,background:'var(--gray-50)',borderColor:'var(--gray-200)',color:'var(--gray-600)'}},
           h('b',{},'Comentario automático: '),row.comentarioAuto)
