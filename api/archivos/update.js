@@ -5,8 +5,8 @@ const LATEST_KEY = 'tablero-deuda/archivos-latest.json';
 // POST /api/archivos/update
 // Lo usan el botón "Publicar para compartir" del tablero y el HTTP Request final del workflow
 // de n8n ("Enviar Archivos al Tablero (Vercel)").
-// Body: { fecha, archivos: { cta_cte:{nombre,base64}, cheques:{...}, contratos:{...}, negocios?:{...} }, params? }
-// Negocios es OPCIONAL (el tablero funciona sin ese archivo).
+// Body: { fecha, archivos: { cta_cte:{nombre,base64}, contratos:{...}, negocios?:{...}, clientes?:{...} }, params? }
+// Negocios y Base de clientes son OPCIONALES. Si llega "cheques" (ej. desde el n8n) se guarda pero el tablero no lo usa.
 module.exports = async (req, res) => {
   if (req.method !== 'POST') {
     res.status(405).json({ error: 'Método no permitido' });
@@ -32,7 +32,8 @@ module.exports = async (req, res) => {
     return;
   }
 
-  const requeridos = ['cta_cte', 'cheques', 'contratos'];
+  // Cheques ya no es obligatorio: el tablero los toma de la Cta Cte aplicada (RI pendientes).
+  const requeridos = ['cta_cte', 'contratos'];
   const faltantes = requeridos.filter((k) => !data.archivos[k] || !data.archivos[k].base64);
   if (faltantes.length) {
     res.status(400).json({ error: `Faltan archivos: ${faltantes.join(', ')}` });
