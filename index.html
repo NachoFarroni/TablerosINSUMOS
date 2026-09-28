@@ -216,18 +216,31 @@ tbody .col-deuda{background:rgba(224,238,255,.4)}tbody .col-total{background:rgb
 .seg-detail-modal{background:var(--white);border-radius:var(--radius-lg);box-shadow:var(--shadow-lg);width:100%;max-width:700px;overflow:hidden;animation:modalIn .2s ease}
 .app-footer{text-align:center;padding:13px;font-size:.7rem;color:var(--gray-400);border-top:1px solid var(--gray-200);background:var(--white)}
 /* CONSOLIDADO POR MES */
-.cons-wrap{overflow-x:auto;max-height:70vh;border-radius:0 0 var(--radius-lg) var(--radius-lg);box-shadow:var(--shadow-md);border:1px solid var(--gray-200);border-top:none}
-.cons{border-collapse:separate;border-spacing:0;font-size:.76rem;background:var(--white);min-width:100%}
+.cons-wrap{container-type:inline-size;overflow-x:auto;max-height:70vh;border-radius:0 0 var(--radius-lg) var(--radius-lg);box-shadow:var(--shadow-md);border:1px solid var(--gray-200);border-top:none}
+.cons{border-collapse:separate;border-spacing:0;font-size:.76rem;background:var(--white);width:100%;table-layout:fixed}
+/* Ancho de columna fijo para Cliente (190px), CUIT (96px) y Total (104px); el resto se reparte
+   entre los meses y la letra se achica según cuántos meses haya (--n) para que entre sin scroll. */
+.cons td,.cons th{font-size:clamp(9px,calc((100cqi - 400px) / var(--n,6) / 7.4),12.5px)}
+.cons thead th{white-space:normal!important;line-height:1.2;vertical-align:bottom;font-size:clamp(8.5px,calc((100cqi - 400px) / var(--n,6) / 9),10.5px)!important;padding:7px 5px!important}
 .cons thead th{background:var(--navy-light);color:#fff;font-size:.65rem;font-weight:700;text-transform:uppercase;letter-spacing:.05em;padding:8px 10px;white-space:nowrap;position:sticky;top:0;z-index:2;cursor:pointer;user-select:none}
 .cons thead th:hover{background:var(--navy-mid)}
-.cons th.c-cli,.cons td.c-cli{position:sticky;left:0;z-index:3;text-align:left;min-width:230px;max-width:230px;background:var(--white);border-right:2px solid var(--gray-200);font-family:var(--font-sans);color:var(--navy);font-weight:500;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.cons th.c-cli,.cons td.c-cli{position:sticky;left:0;z-index:3;text-align:left;width:190px;min-width:190px;max-width:190px;background:var(--white);border-right:1px solid var(--gray-200);font-family:var(--font-sans);color:var(--navy);font-weight:500;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.cons th.c-cuit,.cons td.c-cuit{position:sticky;left:190px;z-index:3;width:96px;min-width:96px;max-width:96px;text-align:left;background:var(--white);border-right:2px solid var(--gray-200);color:var(--gray-600)}
+.cons thead th.c-cuit{background:var(--navy-light);color:#fff;z-index:4;cursor:default}
+.cons tbody tr:nth-child(even) td.c-cuit{background:#f4f7fb}
+.cons tfoot td.c-cuit{z-index:4}
+.cons th.c-tot,.cons td.c-tot{position:sticky;right:0;z-index:3;width:104px;min-width:104px}
+.cons thead th.c-tot{z-index:4}
+.cons tfoot td.c-tot{z-index:4;background:#0a1f3d!important}
+.cons tbody td.c-tot{background:#eef5ff!important}
+.cons-aviso{font-size:.72rem;color:#8a5a00;background:#fff6e0;border:1px solid #f2d48a;border-radius:var(--radius);padding:6px 10px;margin-bottom:8px}
 .cons thead th.c-cli{background:var(--navy-light);color:#fff;z-index:4}
 .cons tbody td.c-cli{cursor:pointer}
 .cons tbody td.c-cli:hover{color:var(--blue);text-decoration:underline}
 .cons tbody tr:nth-child(even) td{background:var(--gray-50)}
 .cons tbody tr:nth-child(even) td.c-cli{background:#f4f7fb}
 .cons tbody tr:hover td{background:var(--sky)!important}
-.cons td{padding:6px 10px;border-bottom:1px solid var(--gray-100);font-family:var(--font-mono);text-align:right;white-space:nowrap}
+.cons td{padding:6px 5px;overflow:hidden;text-overflow:clip;border-bottom:1px solid var(--gray-100);font-family:var(--font-mono);text-align:right;white-space:nowrap}
 .cons .c-tot{background:rgba(224,238,255,.45)!important;font-weight:700;color:var(--navy);border-left:2px solid var(--gray-200)}
 .cons thead th.c-tot{background:#0a1f3d!important;color:#fff!important}
 .cons tfoot td{position:sticky;bottom:0;background:var(--navy)!important;color:#fff!important;font-family:var(--font-mono)!important;font-weight:700!important;padding:9px 10px!important;border-bottom:none!important;z-index:3}
@@ -379,6 +392,53 @@ function normalizeClientName(n){
 }
 function canonical(n){const s=normalizeClientName(n);return DEDUP_MAP[s]||s;}
 
+// ═══ CUIT ═══
+// El CUIT es la clave más confiable para unir un cliente entre archivos: el nombre
+// cambia de escritura según el sistema ("S.A." / "SA" / "SOCIEDAD ANONIMA"), el CUIT no.
+function cuitDigits(v){const s=(v==null?'':v.toString()).replace(/\D/g,'');return s.length===11?s:'';}
+function fmtCuit(d){return d&&d.length===11?d.slice(0,2)+'-'+d.slice(2,10)+'-'+d.slice(10):'';}
+
+// Une a cada registro con su cliente usando el CUIT cuando lo tiene.
+// 1) La Cta Cte manda: el primer nombre visto para un CUIT es el nombre del cliente.
+// 2) Contratos / cheques / negocios con CUIT se pegan a ese cliente aunque el nombre esté escrito distinto.
+// 3) Los registros SIN CUIT siguen uniendo por nombre normalizado, como antes, y además
+//    aprovechan los alias que dejó el paso 2 (ej. cheque a nombre "TOSQUITA CEREALES SA").
+// 4) Si dos CUIT distintos tienen el mismo nombre, NO se mezclan: el segundo queda como
+//    "NOMBRE (CUIT)" y se avisa.
+function resolverClientes(recCta,otras){
+  const keyPorCuit={},cuitPorKey={},alias={},avisos=[],vistos=new Set();
+  const asignar=(r,origen)=>{
+    const cu=r._cuit;if(!cu)return;
+    const orig=r._c;
+    let k=keyPorCuit[cu];
+    if(!k){
+      k=orig;
+      const duenio=cuitPorKey[k];
+      if(duenio&&duenio!==cu){
+        k=orig+' ('+fmtCuit(cu)+')';
+        const id=orig+'|'+cu;
+        if(!vistos.has(id)){vistos.add(id);
+          avisos.push({nombre:orig,cuits:[fmtCuit(duenio),fmtCuit(cu)],origen});}
+      }
+      keyPorCuit[cu]=k;if(!cuitPorKey[k])cuitPorKey[k]=cu;
+    }
+    r._c=k;
+    if(orig!==k){alias[orig]=alias[orig]===undefined||alias[orig]===k?k:null;}  // null = ambiguo, no se usa
+  };
+  recCta.forEach(r=>asignar(r,'Cta Cte'));
+  otras.forEach(([arr,origen])=>arr.forEach(r=>asignar(r,origen)));
+  // Registros sin CUIT: por nombre, usando alias sólo si no es ambiguo
+  [recCta,...otras.map(o=>o[0])].forEach(arr=>arr.forEach(r=>{
+    if(!r._cuit&&alias[r._c]&&!cuitPorKey[r._c])r._c=alias[r._c];
+  }));
+  return{cuitPorKey,avisos};
+}
+
+// Limpieza de la Cta Cte aplicada "cruda" (antes se hacía a mano en el Excel):
+// - se descartan las filas con TC de emisión vacío (movimientos en $)
+// - se descartan los comprobantes CA, CD, RB, RV, RG y RI
+const CTA_COMP_EXCLUIDOS=new Set(['CA','CD','RB','RV','RG','RI']);
+
 // ═══ COTIZACIONES ═══
 // El navegador no puede leer bna.com.ar ni cac.bcr.com.ar (esos sitios no habilitan
 // CORS). Por eso el tablero le pregunta a /api/cotizaciones, una función que corre en
@@ -454,17 +514,23 @@ function parseCta(wb){
   const cFvto=findCol(h,['Fecha Vencimiento','Vencimiento']);
   const cS=findCol(h,['SALDO_AFECTADOS_DOLARES','Saldo.*D','Saldo']);
   const cTC=findCol(h,['Tipo de Cambio','TipoCambio','TC']);
-  const out=[];
+  const cCuit=findCol(h,['^CUIT$','CUIT']);
+  const out=[];const excl={tc:0,comp:0};
   for(let i=1;i<rows.length;i++){
     const r=rows[i];if(!r||!r[cC])continue;
+    // Limpieza: TC de emisión vacío ⇒ movimiento en $ ⇒ no va
+    if(cTC>=0&&!(num(r[cTC])>0)){excl.tc++;continue;}
+    const tipoComp=((cComp>=0?r[cComp]:'')||'').toString().trim().split(/\s+/)[0].toUpperCase();
+    if(CTA_COMP_EXCLUIDOS.has(tipoComp)){excl.comp++;continue;}
     const saldo=num(r[cS]);
-    out.push({_c:canonical(r[cC]),_d:parseDate(r[cFvto]),_m:saldo,
+    out.push({_c:canonical(r[cC]),_cuit:cCuit>=0?cuitDigits(r[cCuit]):'',_d:parseDate(r[cFvto]),_m:saldo,
       comprobante:(cComp>=0?r[cComp]:'')||'',
       fechaComp:cFcomp>=0?r[cFcomp]:null,
       vencimiento:r[cFvto],
       tc:cTC>=0?num(r[cTC]):null,
       saldo});
   }
+  out.excluidas=excl;out.sinColTC=cTC<0;
   return out;
 }
 
@@ -481,6 +547,7 @@ function parseNegocios(wb){
   const cI=findCol(h,['IMPORTE','Importe','Monto']);
   const cR=findCol(h,['DESCIPCION_RUBRO','DESCRIPCION_RUBRO','Rubro']);
   const cFvto=findCol(h,['FECHA_VENCIMIENTO_ORIGEN','Vencimiento.*Origen']);
+  const cCuit=findCol(h,['^CUIT$','CUIT.*Cliente','CUIT.*Productor']);
   const out=[];
   for(let i=1;i<rows.length;i++){
     const r=rows[i];if(!r||!r[cC])continue;
@@ -490,7 +557,7 @@ function parseNegocios(wb){
     const imp=num(r[cI])*(1+iva);
     const cod=(cCod>=0?r[cCod]:'')||'';
     const nro=(cNro>=0?r[cNro]:'')||'';
-    out.push({_c:canonical(r[cC]),_d:parseDate(r[cFvto]),_m:imp,
+    out.push({_c:canonical(r[cC]),_cuit:cCuit>=0?cuitDigits(r[cCuit]):'',_d:parseDate(r[cFvto]),_m:imp,
       comprobante:cod&&nro?cod+' '+nro:(cod||nro||'—'),
       fecha:cFecha>=0?r[cFecha]:null,
       descripcion:(cDesc>=0?r[cDesc]:'')||'',
@@ -511,13 +578,15 @@ function parseCheques(wb,tc){
   const cI=findCol(h,['IMPORTE_CHEQUE','Importe.*Cheque','Importe','Monto']);
   const cNum=findCol(h,['Numero Cheque','NroCheque','Numero','Nro']);
   const cEmision=findCol(h,['Fecha Emision','FechaEmision','Emision']);
+  // Cheques: se unen por NOMBRE (vienen de la misma bajada de Algoritmo que la Cta Cte,
+  // así que el nombre coincide). No se lee ningún CUIT: el del librador puede ser un tercero.
   const out=[];
   for(let i=1;i<rows.length;i++){
     const r=rows[i];if(!r||!r[cC])continue;
     if((r[cM]||'').toString().trim().toUpperCase()!=='T')continue;   // solo Medio Pago = "T"
     const imp=num(r[cI])/tc;
     // El período del cheque lo define SIEMPRE su fecha de pago (acreditación)
-    out.push({_c:canonical(r[cC]),_d:parseDate(r[cF]),_m:imp,
+    out.push({_c:canonical(r[cC]),_cuit:'',_d:parseDate(r[cF]),_m:imp,
       numero:(cNum>=0?r[cNum]:'')||'',
       fechaEmision:cEmision>=0?r[cEmision]:null,
       fechaPago:r[cF],importeARS:num(r[cI]),importeUSD:imp});
@@ -535,6 +604,7 @@ function parseCanjes(wb,tc,precios){
   const cL=findCol(h,['Tns Liquidadas','TnsLiquidadas','Liquidadas']);
   const cPe=findCol(h,['Tns Pendiente','TnsPendiente','Pendiente']);
   const cCtto=findCol(h,['Numero Contrato Hijo','Contrato Hijo','Numero.*Contrato','NroCtto','NumCtto','Nro.*Contrato']);
+  const cCuit=findCol(h,['CUIT_Vendedor','CUIT.*Vendedor']);   // el CUIT_Comprador es FyO, no sirve
   const out=[];
   for(let i=1;i<rows.length;i++){
     const r=rows[i];if(!r||!r[cC])continue;
@@ -549,7 +619,7 @@ function parseCanjes(wb,tc,precios){
     pUSD=num(pUSD);
     const tn=Math.max(0,(num(r[cE])-num(r[cL]))+num(r[cPe]));
     const total=pUSD*tn*1.105;
-    out.push({_c:canonical(r[cC]),_d:parseDate(r[cF]),_m:total,
+    out.push({_c:canonical(r[cC]),_cuit:cCuit>=0?cuitDigits(r[cCuit]):'',_d:parseDate(r[cF]),_m:total,
       contrato:(cCtto>=0?r[cCtto]:'')||'',producto:prod,fechaEntrega:r[cF],precioUSD:pUSD,tn,total,
       // crudos: Deuda Vencida revaloriza con SU propio TC
       precioRaw:num(r[cP]),tnPend:num(r[cPe])});
@@ -627,7 +697,7 @@ function consFilas(cons,metrica,ocultarCeros){
   if(!cons)return[];
   let filas=cons.clientes.map(c=>{
     const vals=c.cells.map(cell=>cell?num(cell[metrica]):0);
-    return{cliente:c.cliente,vals,tot:vals.reduce((a,b)=>a+b,0),cells:c.cells};
+    return{cliente:c.cliente,cuit:c.cuit||'',vals,tot:vals.reduce((a,b)=>a+b,0),cells:c.cells};
   });
   if(ocultarCeros)filas=filas.filter(f=>f.vals.some(v=>Math.abs(v)>=0.5));
   return filas.sort((a,b)=>b.tot-a.tot);
@@ -663,6 +733,8 @@ function processFiles(files,params){
     .then(([wCta,wChq,wNeg,wCanje])=>{
       const recCta=parseCta(wCta),recNeg=wNeg?parseNegocios(wNeg):[],
             recChq=parseCheques(wChq,tc),recCanje=parseCanjes(wCanje,tc,precios);
+      const{cuitPorKey,avisos}=resolverClientes(recCta,[[recCanje,'Contratos'],[recChq,'Cheques'],[recNeg,'Pte Facturar']]);
+      const cuitDe=c=>fmtCuit(cuitPorKey[c]||'');
 
       const conDeuda=new Set();
       recCta.forEach(r=>{if(Math.abs(r._m)>=0.01)conDeuda.add(r._c)});
@@ -691,7 +763,7 @@ function processFiles(files,params){
         const eCanje=p.s===null?limiteCanjeVencido:p.e;
         return buildTable(agg(recCta,p.s,p.e),agg(recNeg,p.s,p.e),agg(recChq,p.s,p.e),agg(recCanje,p.s,eCanje),conDeuda);
       };
-      periods.forEach(p=>{p.rows=armar(p);});
+      periods.forEach(p=>{p.rows=armar(p);p.rows.forEach(r=>{r.cuit=cuitDe(r.cliente);});});
 
       // ── Vista consolidada ────────────────────────────────────────────────
       // La PRIMERA columna es el mes corriente y absorbe todo lo vencido de antes:
@@ -705,12 +777,13 @@ function processFiles(files,params){
       const mapa=new Map();
       consCols.forEach((c,i)=>{
         armar(c).forEach(r=>{
-          if(!mapa.has(r.cliente))mapa.set(r.cliente,{cliente:r.cliente,cells:new Array(consCols.length).fill(null)});
+          if(!mapa.has(r.cliente))mapa.set(r.cliente,{cliente:r.cliente,cuit:cuitDe(r.cliente),cells:new Array(consCols.length).fill(null)});
           mapa.get(r.cliente).cells[i]=r;
         });
       });
       const consolidado={cols:consCols.map(c=>({key:c.key,label:c.label,corto:c.corto,acum:c.acum})),
-                         clientes:[...mapa.values()]};
+                         clientes:[...mapa.values()],avisos,
+                         limpieza:{...(recCta.excluidas||{tc:0,comp:0}),sinColTC:!!recCta.sinColTC}};
 
       return{periods,consolidado,diasVencidos:calcDiasVencidos(recCta,hoy),fechaRef:ref,
              recs:{cta:recCta,chq:recChq,canje:recCanje},sinNegocios};
@@ -897,14 +970,14 @@ function exportToExcel(periods,params,obs,dv,cons){
 
   // Hoja del consolidado por mes
   if(cons&&cons.filas&&cons.filas.length){
-    const hdr=['CLIENTE',...cons.cols.map(c=>c.acum?c.label.toUpperCase()+' (INCLUYE VENCIDO)':c.label.toUpperCase()),'TOTAL'];
+    const hdr=['CLIENTE','CUIT',...cons.cols.map(c=>c.acum?c.label.toUpperCase()+' (INCLUYE VENCIDO)':c.label.toUpperCase()),'TOTAL'];
     const data=[hdr];
-    cons.filas.forEach(f=>data.push([f.cliente,...f.vals.map(v=>v||null),f.tot||null]));
+    cons.filas.forEach(f=>data.push([f.cliente,f.cuit||'',...f.vals.map(v=>v||null),f.tot||null]));
     const tc=i=>cons.filas.reduce((a,f)=>a+(f.vals[i]||0),0);
-    data.push(['TOTAL ('+cons.filas.length+' clientes)',...cons.cols.map((c,i)=>tc(i)),
+    data.push(['TOTAL ('+cons.filas.length+' clientes)','',...cons.cols.map((c,i)=>tc(i)),
       cons.filas.reduce((a,f)=>a+f.tot,0)]);
     const ws=XLSX.utils.aoa_to_sheet(data);
-    ws['!cols']=[{wch:45},...cons.cols.map(()=>({wch:16})),{wch:18}];
+    ws['!cols']=[{wch:45},{wch:15},...cons.cols.map(()=>({wch:16})),{wch:18}];
     XLSX.utils.book_append_sheet(wb,ws,safeName('Consolidado'));
   }
 
@@ -1177,7 +1250,8 @@ function ConsolidadoView({cons,search,metrica,onMetrica,ceros,onCeros,onDetalle,
   const[sortDir,setSortDir]=useState('desc');
   const cols=(cons&&cons.cols)||[];
   let filas=consFilas(cons,metrica,ceros);
-  if(search)filas=filas.filter(f=>f.cliente.toLowerCase().includes(search.toLowerCase()));
+  if(search){const q=search.toLowerCase(),qd=search.replace(/\D/g,'');
+    filas=filas.filter(f=>f.cliente.toLowerCase().includes(q)||(qd.length>=3&&(f.cuit||'').replace(/\D/g,'').includes(qd)));}
   filas=[...filas].sort((a,b)=>{
     if(sortKey==='cliente')return sortDir==='asc'?a.cliente.localeCompare(b.cliente):b.cliente.localeCompare(a.cliente);
     const va=sortKey==='tot'?a.tot:(a.vals[sortKey]||0), vb=sortKey==='tot'?b.tot:(b.vals[sortKey]||0);
@@ -1206,11 +1280,19 @@ function ConsolidadoView({cons,search,metrica,onMetrica,ceros,onCeros,onDetalle,
       h('span',{},'📊 '+filas.length+' clientes · '+cols.length+(cols.length===1?' columna':' columnas')),
       h('span',{},'🧮 '+metricaLbl),
       h('span',{},'💡 Clic en el cliente para ver su detalle'),
+      cons.limpieza&&(cons.limpieza.tc||cons.limpieza.comp)?h('span',{title:'Filas de la Cta Cte que el tablero descarta solo, sin tocar el Excel'},
+        '🧹 Cta Cte: '+cons.limpieza.tc+' filas en $ y '+cons.limpieza.comp+' comprob. CA/CD/RB/RV/RG/RI descartados'):null,
     ),
-    h('div',{className:'cons-wrap'},
+    cons.limpieza&&cons.limpieza.sinColTC?h('div',{className:'cons-aviso'},
+      '⚠️ La Cta Cte no trae la columna "Tipo de Cambio Emisión": no se pudieron descartar las filas en $.'):null,
+    cons.avisos&&cons.avisos.length?h('div',{className:'cons-aviso'},
+      '⚠️ Mismo nombre con CUIT distinto (se muestran separados): ',
+      cons.avisos.map(a=>a.nombre+' → '+a.cuits.join(' / ')+' ['+a.origen+']').join(' · ')):null,
+    h('div',{className:'cons-wrap',style:{'--n':cols.length}},
       h('table',{className:'cons'},
         h('thead',{},h('tr',{},
           h('th',{className:'c-cli',onClick:()=>onSort('cliente')},'Cliente ',flecha('cliente')),
+          h('th',{className:'c-cuit'},'CUIT'),
           cols.map((c,i)=>h('th',{key:c.key,className:(c.acum?'c-hoy':''),onClick:()=>onSort(i)},
             c.acum?c.label.replace(' de ',' '):c.corto,' ',flecha(i),
             c.acum?h('span',{className:'cons-hint'},'vencido + el mes'):null)),
@@ -1218,20 +1300,23 @@ function ConsolidadoView({cons,search,metrica,onMetrica,ceros,onCeros,onDetalle,
         )),
         h('tbody',{},filas.map(f=>h('tr',{key:f.cliente},
           h('td',{className:'c-cli',title:f.cliente,onClick:()=>onDetalle(f)},f.cliente),
+          h('td',{className:'c-cuit'+(f.cuit?'':' cero')},f.cuit||'—'),
           f.vals.map((v,i)=>h('td',{key:i,className:(cols[i].acum?'c-hoy':'')+(Math.abs(v)<0.5?' cero':'')},fmtUSD0(v))),
           h('td',{className:'c-tot'},fmtUSD0(f.tot)),
         ))),
         h('tfoot',{},h('tr',{},
           h('td',{className:'c-cli'},'TOTAL ('+filas.length+' clientes)'),
+          h('td',{className:'c-cuit'},''),
           cols.map((c,i)=>h('td',{key:i},fmtUSD0(totCol(i)))),
-          h('td',{},fmtUSD0(totGen)),
+          h('td',{className:'c-tot'},fmtUSD0(totGen)),
         ))
       )
     ),
     h('div',{className:'legend-bar',style:{flexDirection:'column',alignItems:'flex-start',gap:'3px'}},
       h('span',{className:'leg'},'La primera columna es el mes corriente e incluye TODO lo vencido de antes: es todo vencimiento hasta el último día de ese mes. Por eso el Total es la suma limpia de las columnas.'),
-      h('span',{className:'leg'},'El nombre del cliente queda fijo al desplazar en horizontal. Clic en el encabezado para ordenar.'),
-      h('span',{className:'leg'},'La exportación a Excel suma una hoja "Consolidado" con esta misma grilla.'),
+      h('span',{className:'leg'},'La grilla se achica sola para entrar en el ancho de la pantalla. Si aun así no entra, Cliente/CUIT quedan fijos a la izquierda y el Total a la derecha. Clic en el encabezado para ordenar.'),
+      h('span',{className:'leg'},'Los clientes se unen entre archivos por CUIT; si un registro no trae CUIT, se une por nombre. Podés buscar también por CUIT.'),
+      h('span',{className:'leg'},'La exportación a Excel suma una hoja "Consolidado" con esta misma grilla, con el CUIT al lado del cliente.'),
     )
   );
 }
