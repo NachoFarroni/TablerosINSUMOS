@@ -3,24 +3,26 @@ const { get } = require('@vercel/blob');
 const LATEST_KEY = 'tablero-deuda/archivos-latest.json';
 
 // GET /api/archivos/latest
-// Lo consume el bloque de AUTO-CARGA agregado en index.html.
-// Como el Blob Store es privado, se lee con get() (autenticado automáticamente
-// por Vercel vía OIDC), no con un fetch directo a una URL pública.
+// Lo consume la AUTO-CARGA del index.html. El Blob Store es privado, así que se lee
+// con get() autenticado (token del store conectado al proyecto), nunca con una URL pública.
 module.exports = async (req, res) => {
+  res.setHeader('Cache-Control', 'no-store');
   try {
-    const result = await get(LATEST_KEY, { access: 'private' });
+    // useCache:false → siempre la última publicación, aunque se haya pisado hace segundos
+    const result = await get(LATEST_KEY, { access: 'private', useCache: false });
     if (!result || !result.stream) {
-      res.status(404).json({ error: 'Todavía no hay ninguna corrida del ETL guardada.' });
+      res.status(404).json({ error: 'Todavía no hay ningún tablero publicado.' });
       return;
     }
-
-    const chunks = [];
-    for await (const chunk of result.stream) {
-      chunks.push(chunk);
-    }
-    const texto = Buffer.concat(chunks).toString('utf-8');
+    const texto = await new Response(result.stream).text();
     res.status(200).json(JSON.parse(texto));
-  } catch {
-    res.status(404).json({ error: 'Todavía no hay ninguna corrida del ETL guardada.' });
+  } catch (e) {
+    if (e && (e.name === 'BlobNotFoundError' || /not.?found/i.test(e.message || ''))) {
+      res.status(404).json({ error: 'Todavía no hay ningún tablero publicado.' });
+      return;
+    }
+    // Cualquier otro error (token, store, permisos) se informa tal cual para poder diagnosticarlo
+    console.error('Error leyendo de Blob:', e);
+    res.status(500).json({ error: 'No se pudo leer de Vercel Blob: ' + (e && e.message ? e.message : e) });
   }
 };
