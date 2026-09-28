@@ -57,7 +57,7 @@ body{font-family:var(--font-sans);background:var(--gray-50);color:var(--gray-800
 .section-header{margin-bottom:28px}
 .section-header h2{font-size:1.6rem;font-weight:700;color:var(--navy);letter-spacing:-.03em}
 .section-header p{color:var(--gray-600);margin-top:6px;font-size:.9rem}
-.dropzones-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:16px;margin-bottom:28px}
+.dropzones-grid{display:grid;grid-template-columns:repeat(5,1fr);gap:16px;margin-bottom:28px}
 @media(max-width:900px){.dropzones-grid{grid-template-columns:repeat(2,1fr)}}
 .dropzone{border:2px dashed var(--gray-200);border-radius:var(--radius-lg);background:var(--white);padding:28px 16px 24px;cursor:pointer;transition:all .2s;display:flex;flex-direction:column;align-items:center;gap:8px;text-align:center;box-shadow:var(--shadow)}
 .dropzone:hover{border-color:var(--blue-light);background:var(--sky);transform:translateY(-2px)}
@@ -218,14 +218,14 @@ tbody .col-deuda{background:rgba(224,238,255,.4)}tbody .col-total{background:rgb
 /* CONSOLIDADO POR MES */
 .cons-wrap{container-type:inline-size;overflow-x:auto;max-height:70vh;border-radius:0 0 var(--radius-lg) var(--radius-lg);box-shadow:var(--shadow-md);border:1px solid var(--gray-200);border-top:none}
 .cons{border-collapse:separate;border-spacing:0;font-size:.76rem;background:var(--white);width:100%;table-layout:fixed}
-/* Ancho de columna fijo para Cliente (190px), CUIT (96px) y Total (104px); el resto se reparte
+/* Ancho de columna fijo para Cliente (190px), CUIT (112px) y Total (104px); el resto se reparte
    entre los meses y la letra se achica según cuántos meses haya (--n) para que entre sin scroll. */
-.cons td,.cons th{font-size:clamp(9px,calc((100cqi - 400px) / var(--n,6) / 7.4),12.5px)}
-.cons thead th{white-space:normal!important;line-height:1.2;vertical-align:bottom;font-size:clamp(8.5px,calc((100cqi - 400px) / var(--n,6) / 9),10.5px)!important;padding:7px 5px!important}
+.cons td,.cons th{font-size:clamp(9px,calc((100cqi - 416px) / var(--n,6) / 7.4),12.5px)}
+.cons thead th{white-space:normal!important;line-height:1.2;vertical-align:bottom;font-size:clamp(8.5px,calc((100cqi - 416px) / var(--n,6) / 9),10.5px)!important;padding:7px 5px!important}
 .cons thead th{background:var(--navy-light);color:#fff;font-size:.65rem;font-weight:700;text-transform:uppercase;letter-spacing:.05em;padding:8px 10px;white-space:nowrap;position:sticky;top:0;z-index:2;cursor:pointer;user-select:none}
 .cons thead th:hover{background:var(--navy-mid)}
 .cons th.c-cli,.cons td.c-cli{position:sticky;left:0;z-index:3;text-align:left;width:190px;min-width:190px;max-width:190px;background:var(--white);border-right:1px solid var(--gray-200);font-family:var(--font-sans);color:var(--navy);font-weight:500;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.cons th.c-cuit,.cons td.c-cuit{position:sticky;left:190px;z-index:3;width:96px;min-width:96px;max-width:96px;text-align:left;background:var(--white);border-right:2px solid var(--gray-200);color:var(--gray-600)}
+.cons th.c-cuit,.cons td.c-cuit{position:sticky;left:190px;z-index:3;width:112px;min-width:112px;max-width:112px;font-size:clamp(9px,.72rem,11.5px)!important;text-align:left;background:var(--white);border-right:2px solid var(--gray-200);color:var(--gray-600)}
 .cons thead th.c-cuit{background:var(--navy-light);color:#fff;z-index:4;cursor:default}
 .cons tbody tr:nth-child(even) td.c-cuit{background:#f4f7fb}
 .cons tfoot td.c-cuit{z-index:4}
@@ -434,6 +434,23 @@ function resolverClientes(recCta,otras){
   return{cuitPorKey,avisos};
 }
 
+// Base de clientes con CUIT (Clientes_cuit_28_9.xlsx, 318 clientes). Se usa SOLO para mostrar
+// el CUIT de un cliente cuando no aparece en ningún archivo cargado (típico: clientes que sólo
+// están en Pendiente de Facturar, que no trae CUIT). No se usa para unir clientes.
+// Se puede actualizar sin tocar el código: cargando una base nueva en el recuadro
+// "Base de clientes con CUIT", que tiene prioridad sobre esta.
+const CUIT_BASE_FECHA='28/09/2026';
+const CUIT_BASE=[["3 AGRO S.A.S. EN FORMACION","30716864525"],["ACOPIO AREQUITO SA","30543487348"],["AGL S.A.","30710150520"],["AGRO COTTON S.A.","30716267101"],["AGRO HERNANDO SRL","30710052502"],["AGRO INSUMOS DEL CENTRO SRL","30715154265"],["AGRO KOM KAWA SRL","30709708674"],["AGRO MATORRALES S.A.","30677538992"],["AGRO NORTE SRL","33716913479"],["AGRO PETROSURCO S. A.","30715748432"],["AGRO PRECISA S.A.","33711610559"],["Agro Uranga S.A.","30508630510"],["AGROCAFE S A","33707998429"],["AGROCULTIVOS DEL SUR SOCIEDAD SIMPLE DE DANIEL M.","30715223909"],["Agrofil SRL","30708653159"],["AGROFY PAY S. A. U.","30717866408"],["AGROINSUMOS AÑATUYA SRL","30707745327"],["AGROLAM SA","30703362326"],["AGRONASAJA SRL","30710712758"],["AGRONOMIA G & V S. R. L.","30717139581"],["Agropecuaria Dechamps SRL","30711832161"],["AGROPECUARIA DON DAVID S.A.","33711346169"],["AGROPECUARIA SAN ANTONIO S.A.","30708244755"],["AGROPECUARIA SAN PEDRO S.R.L.","30707184716"],["AGROPECUARIA SANTA TERESA S. A.","30507685168"],["AGROPECUARIA SUR S A","30616031526"],["AGRORESERVAS ARGENTINA SA","30709428973"],["AGROSERVICIOS DOÑA TERESA S.R.L.","33708521359"],["Agroservicios Humboldt S.A.","30707129103"],["AGROTECNICA COMERCIAL S.R.L. (AGROTECNICA COMERCIA","30573020819"],["Agrotecnología y Servicios S.A.","30705468008"],["ALARCIA MARTIN ALBERTO","20357956790"],["ALBERTO CROSSETI SA","33716901179"],["ALDO RUFFINO AGROPECUARIA S. A.","30717457052"],["ALFAGRO S A","30708615036"],["ALFREDO S. MONDINO CEREALES SRL","30715948318"],["AMAUTA AGRO S.A.","30710639392"],["AMSLER ROBERTO","30509077645"],["ARGENCERES SAN JUAN S.A.","30710622058"],["AST AGRO S.A.","30714764221"],["Aurelio Camuyrano e Hijos SRL","30645681602"],["AVANZAR S. A.","30674846343"],["AZUL INICIOS SRL","30714201200"],["BACALONI AGRO S.R.L.","30710338112"],["BAILLERES COMERCIAL S.A","33708125879"],["Balducchi Juan Jose","20104910697"],["Balducchi Miguel Angel","20060748978"],["BARACCO JUAN FRANCISCO","20255897684"],["BARTOLELLI DARIO R.","30711018650"],["BELLAMAR ESTANCIAS SA","30657197897"],["BERARDO AGROPECUARIA SRL","30638195662"],["Bertossi Diego Ruben","20230718106"],["BINDU S.R.L.","30717426033"],["BIOCERES SEMILLAS SA","33710831659"],["Bioeste S.A.","33711332079"],["Biolato Cereales SC","30708129840"],["BIOMAGNA S.A.","33714928169"],["BOUVET DARIO JOSE","20232549875"],["BRESSAN ALBERTO LUIS","20141460553"],["Bruno Eduardo Esteban","20107175157"],["BUDACI PABLO ALEJANDRO","20253281945"],["C.D.M. AGROPECUARIA SOCIEDAD ANONIMA","30710669704"],["CACCIAGRO S. R. L.","30709797561"],["CAIMI SILVA DARIO EMILIANO","23326162469"],["CAIO BIBILONI Y CIA S.R.L.","30708184884"],["Calvu Malal SA","33713250509"],["CAMPO DE AVANZADA SA","30713302208"],["CAMPO EL OMBU S.A","30716776693"],["CAMPO FERTIL SOCIEDAD DE RESPONSABILIDAD LIMITADA","30714327573"],["CAON ATILIO J Y CAON MIGUEL A SOC DE HECHO","30601920243"],["Carlos Boero Romano S. A. Industrial Y Comercial","30535121032"],["CARMAN JUAN CRUZ","20225333042"],["CDM AGRO S.A.S.","30717106403"],["Centro Agropecuario Modelo S.A.","30643991868"],["CENTRO AGROPECUARIO, INSUMOS, SERVICIOS, CEREALES","30710099606"],["CERDAN MARIO RUBEN","20201429030"],["CEREALES BOLZAN S R L","30615770791"],["CEREALES DEC SOCIEDAD ANONIMA","30710863136"],["CEREALES QUEMU SA","33581249549"],["CEREALES SANTA LUCIA SA","30604408268"],["CEREALISTA MOLDES S A","30698538631"],["CHIARAVIGLIO HNOS S.R.L","30707297162"],["CIELOS CEREALES SOCIEDAD ANONIMA","30665274442"],["CINGOLANI FERNANDO LUIS","20254544249"],["CN AGRO SA","30714143006"],["COFCO INTERNATIONAL ARGENTINA SA","33506737449"],["COMBUSTIBLES DEL NORTE S A","30681284474"],["Comercial Eusebia SA","30684369624"],["COMPAÑIA DE CEREALES LA PELADA","30605886929"],["Compañia de Insumos Y Granos S.A.","30668299462"],["Conci SRL","30594732088"],["COOP AGROPECUARIA EMBAJADOR MARTINI LTDA","30533615909"],["Coop. Agrícola Ganadera de Videla Limitada","30531164667"],["COOP. AGRICOLA GANADERA LUQUE LIMITADA","33530731699"],["COOPERATIVA AGRICOLA GANADERA DE RAUCH LTDA","30511904206"],["COOPERATIVA AGRICOLA GANADERA LEON SOLA LTDA","30534395678"],["COOPERATIVA AGRICOLA GANADERA Y DE SERVICIOS PUBL","30534003761"],["COOPERATIVA AGRICOLA LUCIENVILLE LIMITADA","30526145417"],["COOPERATIVA AGRICOLA MIXTA LA PROTECTORA LTDA","30526400301"],["COOPERATIVA AGROPECUARIA DE LOPEZ LIMITADA","30508378765"],["COOPERATIVA AGROPECUARIA DE MURPHY LIMITADA","30533413524"],["Cooperativa agropecuaria El Progreso Limitada","30513381944"],["COOPERATIVA AGROPECUARIA LA PAZ LTDA","30532458834"],["Cooperativa de tamberos La Tordilla LTDA","30527820517"],["CRESUD S.A.C.I.F. Y A","30509300700"],["CRISOPA SRL","30716385422"],["DAS CAMPO S. R. L.","30717466973"],["DECHAMPS ANTOINE JEAN MARIE","23924770759"],["DEL TORREON SA","30678603003"],["DELLIZZOTTI HERMANOS S R L","30593802104"],["DEPETRIS RODIAN LORENZO","20176454890"],["DESARROLLOS AGRICOLAS DEL SUR SRL","30715261746"],["DESDELSUR S A","30629401888"],["DIORSEM SA","30716273179"],["DISTRIBUIDORA ROYJO S R L","30653347711"],["Division Agropecuaria SA","30695647987"],["DOMAGRO S.A.","30718169247"],["DON ALFREDO AGRO S.A.U.","33716776749"],["DON OSVALDO SA","30644861216"],["Dovales SA","30708608692"],["DS Hnos. SRL","30715346849"],["ECHANIZ HERMANOS SOCIEDAD ANONIMA","30668473241"],["EDENRED ARGENTINA SOCIEDAD ANONIMA","30623608677"],["EDUARDO BERAZA S A","30547090523"],["EDUARDO STERTZ E HIJOS S.R.L.","30690448692"],["El Alamo S.R.L.","30689806127"],["EL AZAR S.A.","30710145128"],["EL BIGUA S.A.S.","30716552809"],["EL BOZAL SRL","30568664430"],["EL CEIBO CEREALES SOCIEDAD DE RESPONSABILIDAD LIMI","30666946541"],["EL ESQUINERO CONTRATISTA RURAL S.A.S.","30716501376"],["EL GUAYACAN SRL","30715422197"],["EL GUAYMALLEN SA","30709197289"],["EL JAQUE SEMILLAS SRL","30715535749"],["EL MALINCHE S.A.S","30708508094"],["El pretexto S.A.","30642478989"],["ELORZA AGRO S. R. L.","33668853779"],["EMPRENDIMIENTOS DE SIEMBRA ASOCIADOS SRL","30711898707"],["ENDROP SRL","30714545503"],["ENTRE RIOS S A","30518459178"],["ESKEL SA","33707173179"],["ESTABLECIMIENTO AGRICOLA GANADERO SAN IGNACIO SRL","30701767515"],["ESTABLECIMIENTO AGROPECUARIO LA FANTASIA SA","30710320876"],["ESTABLECIMIENTO DON AVELINO SRL","30634259569"],["ESTANCIA LA MADRUGADA SOCIEDAD ANONIMA","30645103072"],["ESTANCIA SAN FRANCISCO SOCIEDAD ANONIMA AGROPECUAR","30512603498"],["ESTANCIAS DEL LITORAL CAMBA SA AGRIC. GANAD.","30506781457"],["ESTANCIAS SAN AGUSTIN SOCIEDAD EN COMANDITA POR AC","30553636007"],["EVASIO MARMETTO SA","30537620893"],["Fadel SA","30708142677"],["Fain Hector E y Gustavo Ricardo y Sergio Daniel SA","30641684216"],["FAMILIA SPORTELLI BONJOUR S. A","30710498934"],["FELT SRL","30715687301"],["FERTI TRACK SRL","30716730391"],["FERTILCORD S.A","30714175714"],["FIDECAL SRL","30552945006"],["FIORDANI RENZI CEREALES S.A.","30618188244"],["FONDOMONTE SOUTH AMERICA SA","30710337892"],["FORMASEM S.A","30716143267"],["FULL AGRO S.A.","30708925167"],["FYCSA SA","30707098585"],["GAGLIARDO AGRICOLA GANADERA S.A.","30708324546"],["GAILLOUR AGROPECUARIA","33708522789"],["GALEAZZI S.A.","30709747610"],["GANADERA LOS MOLLES S.A.","30707385347"],["GARCIA ANA VICTORIA","27272666798"],["GARCIA NICOLAS","20298862272"],["GARRUCHOS S A","30576210058"],["GASTALDI HNOS SAICFEI","30539081086"],["GAUDE EDUARDO CESAR","20233897591"],["GAVIGLIO COMERCIAL SA","30552686531"],["Gesagro S.A.","30659191101"],["GLIMAX S.R.L.","30709771023"],["GOMEZ MIGUEL FELIX","20149326988"],["gonfer sa","30711000255"],["GONZALEZ RAMOS WALTER JAVIER","20277770262"],["GRA FER S R L","30707514627"],["Granero SRL","30604954130"],["GRANOS DEL OESTE SOCIEDAD ANONIMA","30708146842"],["GRANOS Y SEMILLAS SA","30711126704"],["GRUPO TRASLASIERRAS S.A.S.","30716940191"],["GRUPO UNUS S.A.","30707084215"],["GUALEGUAY CEREALES S.A.","30709224960"],["GUAZZARONI GRECO SA","30542648747"],["GUNEGONDI ALBERTO FEDERICO","20133012339"],["H & H OUTFITTERS SA","33693032909"],["Hector A Bolzan y Cia S.R.L.","30608073643"],["Hector A. Bertone S.A.","30708587415"],["HECTOR VIDAL Y ASOC S R L","30708129727"],["Hercos SA","33602489499"],["HESAR HNOS S.A","33563572049"],["HOLOWIEJ HNOS SRL","30714843172"],["IJUKAY S.A.","33679868719"],["Inmagar S. A.","33594606049"],["INNOVACION ONCATIVO S.A.","30714896063"],["INSUMOS DEL CENTRO SA","33711018129"],["INTEGRAL AGROPECUARIA SRL","30653461433"],["INTEGRAL SUR S.R.L","30715941771"],["Izca Yacu S.A.","30697564140"],["JANDIK GABRIEL IGNACIO","20349465710"],["JANDIK ROBERTO JAVIER","20263305397"],["JOLLY PINASCO S.A.","33708321759"],["JORGE LUIS MAFFIA SA","30710289103"],["JORGE RAUL ROSSI E HIJO","30707763201"],["Jose Constantini SA","30510382478"],["JOSE LUIS LIZASO E HIJOS S.H. DE LIZASO JOSE LUIS;","30712349928"],["KELYMAR SOCIEDAD ANONIMA","30627329055"],["KIÑEWEN SA","33708614179"],["KROPS SRL","30716735903"],["La Dorita S.A.","30567131145"],["LA ESTRELLA S R L","30709364436"],["LA LITA SRL","30709487414"],["LA SORPRESA SAICA","30560276377"],["LA TRANQUERA VERDE SA","30715571060"],["LA TROJA AGRO SOCIEDAD ANONIMA","30709363502"],["LA ZULEMA S.A.","30711343551"],["Lartirigoyen Y Cia. S. A.","30613985995"],["LAS LAGUNAS Y ASOCIADOS S A","30613318441"],["LELL ATILIO FRANCISCO","20077050702"],["LEON RABEY E HIJOS SRL","30571131591"],["LETTIERI CRISTIAN SEBASTIAN","20285216398"],["LINEUP GRAIN S.A.","30715266705"],["LIPSA SRL","30711566771"],["LOGRANDO AMIGOS S R L","33709002339"],["Los Medanos SCA","30518690589"],["LOS TACURUCES SA","30707062076"],["LUCCHETTI CARLOS GASTON","20264520275"],["M.C.M SOCIEDAD DE RESPONSABILIDAD LIMITADA","30710277474"],["MACIEL CESAR LEONARDO","20204848239"],["MAGNANO PABLO FABIAN","20175734253"],["MAGO GUSTAVO ENRIQUE","20208497651"],["Maiocco Cereales S.A.","30709243752"],["MARCOS SCHMUKLER S A","30552910512"],["Mario A Berisso","30508975372"],["MAS AGRO CENTRO S.A.S.","30716843374"],["MAYTOM AGROINVERSIONES SOCIEDAD ANONIMA","30708500921"],["MEBUR SOCIEDAD ANONIMA INMOBILIARIA Y COMERCIAL","33535338499"],["MELCHIORI HNOS S.A.","30708616830"],["MENTUCCI AGROPECUARIA S.A.S.","30716795922"],["Mentucci Mauricio Norberto","24256445502"],["Mentucci Rafael Dario","20206876329"],["MICHETTI DANIEL ALBERTO","20273371304"],["MISAEL ALBECIANO SA","30717234584"],["MONTE OVEJERO SCA","30551329832"],["MURATURE ONCATIVO S.A.","30711406669"],["NECA AGRO S.A","30714143006"],["NEUMATICOS GIOLITTI HNOS S.R.L.","30707213287"],["NIDATUN SRL","30716735911"],["NOVA S. A. U","30638611097"],["NUEVA BILBAO S.A.","30708276622"],["OLIVANTI MAURICIO FABIAN","20241991467"],["OLTA S.A.","30714090026"],["ORTEGA GUEMBERENA S.A","30708847859"],["PALACIOS JUAN IGNACIO","20217201250"],["PAMPACROPS S. R. L.","30718269780"],["PAREDES CEREALES SOCIEDAD ANONIMA","30700236516"],["PETROTANDIL SOCIEDAD ANONIMA COMERCIAL INDUSTRIAL","30535230842"],["Plantaflor S.A.","33698488749"],["PLUSAGRO S.R.L.","30707650563"],["PM ORIGEN SA","30711428069"],["POLSAC SRL","33687131849"],["PONCE MICINO RENE ARNALDO LEONEL","20317411031"],["PRIGIONI AGRO SRL","30714436194"],["PRO DE MAN SOCIEDAD ANONIMA","33669088499"],["PRODUCTORES DE GENERAL PIRAN S.A.","30709825891"],["PRONOR SA","30668346908"],["Puerto Arroyo Seco SA","30644215403"],["R J GAGLIARDO SA","30601456083"],["R Y G Sgarlatta S R L","30623346133"],["RAUL JOSE BATET S.R.L.","30708078383"],["RIBACK & CIA CEREALES SRL","30714148024"],["RIBOLDI S.A.","30557902682"],["RIVARA SA","30601191640"],["RIZOBACTER ARGENTINA S A","30593174057"],["ROAGRO NEGOCIOS SA","30710674570"],["ROGGERO JORGE PAUL","20331512916"],["ROMAGNOLI HECTOR HUGO","20164916589"],["ROSSA CARLOS CESAR","23164085619"],["ROZA HNOS S A","30622657666"],["RPU AGROPECUARIA S.A.","30711388202"],["RUFFINO ALDO ESTEBAN JOSE","20086183251"],["S.L.AGRO NECOCHEA S.R.L","30666363406"],["SAN PEDRO AGROPECUARIA SA","30636130830"],["SANTA ANGELINA SA","30680524765"],["SANTIAGO DUGAN TROCELLO S.R.L.","30700186489"],["SCORZIELLO Y GALELLA S.A","33561059409"],["SEITON AG","30717438376"],["Semillera Fuertes S. A.","30606563554"],["SERVIS S A","33681062659"],["SIEMBRAS ASOCIADAS S A","33712554199"],["Simiente SA","30713370602"],["SINER S A","30697218056"],["SOCIEDAD ANONIMA SACFIL","30528749166"],["SURI YACO S.R.L.","30708486058"],["Synertech Industrias S.A.","30714607665"],["TAGUAY S.A","30711661138"],["TAURO S. R. L.","30715350382"],["Tecnosur SRL","30709011762"],["Terra Verde Agro Insumos SA","30715442872"],["The Computer S.R.L.","30647097967"],["TOSQUITA CEREALES SOCIEDAD ANONIMA","30585211377"],["TRANSECHAL SRL","30714551589"],["TRESNAL AGROPECUARIA S.A.","33708830599"],["TRIFOLIUM S.A.S","30716287609"],["TRUCAGRO S. R. L.","30717861600"],["TURAGLIO CEREALES SRL","30715484737"],["VIEGAS ALEJO","23239289649"],["VIEJO CIMARRON S.A.","30707749128"],["VILLA MARIA CEREALES S.R.L","30710623941"],["VILUCO SOCIEDAD ANONIMA","30506176278"],["Vinculagro SRL","30717394816"],["Vireyes Agropecuaria S.A.","30682713018"],["YAAR S. A. S.","33719034549"],["Yabito SA","30585965118"],["YACO SA","30707677127"],["Yara Argentina S. A.","30683109033"],["ZANOY AGRO & SERVICIOS SOCIEDAD ANONIMA","30709476676"],["PANIZ AGUSTIN","20323028827"]];
+function dirDesdeLista(lista){const d={};lista.forEach(([n,c])=>{const k=canonical(n),cu=cuitDigits(c);if(k&&cu&&!d[k])d[k]=cu;});return d;}
+function parseBaseClientes(wb){
+  const rows=sheetToRows(wb);if(!rows.length)return{};
+  const h=rows[0].map(x=>(x||'').toString());
+  const cN=findCol(h,['Nombre del Productor','Productor','Cliente','Raz.n Social','Nombre']);
+  const cC=findCol(h,['^CUIT$','CUIT']);
+  if(cN<0||cC<0)return{};
+  return dirDesdeLista(rows.slice(1).filter(r=>r&&r[cN]).map(r=>[r[cN],r[cC]]));
+}
+
 // Limpieza de la Cta Cte aplicada "cruda" (antes se hacía a mano en el Excel):
 // - se descartan las filas con TC de emisión vacío (movimientos en $)
 // - se descartan los comprobantes CA, CD, RB, RV, RG y RI
@@ -516,8 +533,13 @@ function parseCta(wb){
   const cTC=findCol(h,['Tipo de Cambio','TipoCambio','TC']);
   const cCuit=findCol(h,['^CUIT$','CUIT']);
   const out=[];const excl={tc:0,comp:0};
+  // Directorio nombre → CUIT armado con TODAS las filas, incluso las que la limpieza descarta:
+  // un cliente cuya cta cte sólo tiene RG/RI/CD (o movimientos en $) igual conserva su CUIT
+  // para mostrarlo, aunque su deuda venga de otro archivo (ej. Pte de Facturar).
+  const directorio={};
   for(let i=1;i<rows.length;i++){
     const r=rows[i];if(!r||!r[cC])continue;
+    if(cCuit>=0){const cu=cuitDigits(r[cCuit]);const k=canonical(r[cC]);if(cu&&!directorio[k])directorio[k]=cu;}
     // Limpieza: TC de emisión vacío ⇒ movimiento en $ ⇒ no va
     if(cTC>=0&&!(num(r[cTC])>0)){excl.tc++;continue;}
     const tipoComp=((cComp>=0?r[cComp]:'')||'').toString().trim().split(/\s+/)[0].toUpperCase();
@@ -530,7 +552,7 @@ function parseCta(wb){
       tc:cTC>=0?num(r[cTC]):null,
       saldo});
   }
-  out.excluidas=excl;out.sinColTC=cTC<0;
+  out.excluidas=excl;out.sinColTC=cTC<0;out.directorio=directorio;
   return out;
 }
 
@@ -729,12 +751,16 @@ function processFiles(files,params){
   const ref=parseISODate(fechaTablero)||hoy;
   const sinNegocios=!files.negocios;   // el Excel de Negocios es OPCIONAL
   return Promise.all([loadWB(files.ctaCte),loadWB(files.cheques),
-                      sinNegocios?Promise.resolve(null):loadWB(files.negocios),loadWB(files.canjes)])
-    .then(([wCta,wChq,wNeg,wCanje])=>{
+                      sinNegocios?Promise.resolve(null):loadWB(files.negocios),loadWB(files.canjes),
+                      files.clientes?loadWB(files.clientes).catch(()=>null):Promise.resolve(null)])
+    .then(([wCta,wChq,wNeg,wCanje,wCli])=>{
       const recCta=parseCta(wCta),recNeg=wNeg?parseNegocios(wNeg):[],
             recChq=parseCheques(wChq,tc),recCanje=parseCanjes(wCanje,tc,precios);
       const{cuitPorKey,avisos}=resolverClientes(recCta,[[recCanje,'Contratos'],[recChq,'Cheques'],[recNeg,'Pte Facturar']]);
-      const cuitDe=c=>fmtCuit(cuitPorKey[c]||'');
+      const dirCta=recCta.directorio||{};
+      // Prioridad del CUIT: archivos del tablero → base cargada en el recuadro → base fija del código
+      const dirBase={...dirDesdeLista(CUIT_BASE),...(wCli?parseBaseClientes(wCli):{})};
+      const cuitDe=c=>fmtCuit(cuitPorKey[c]||dirCta[c]||dirBase[c]||'');
 
       const conDeuda=new Set();
       recCta.forEach(r=>{if(Math.abs(r._m)>=0.01)conDeuda.add(r._c)});
@@ -1675,7 +1701,7 @@ function DeudaVencidaView({rows,corte,onCorte,tc,onTc,precios,dvState,onDvState,
 
 // ═══ MAIN APP ═══
 function App(){
-  const[files,setFiles]=useState({ctaCte:null,cheques:null,negocios:null,canjes:null});
+  const[files,setFiles]=useState({ctaCte:null,cheques:null,negocios:null,canjes:null,clientes:null});
   const[params,setParams]=useState({
     fechaTablero:hoyISO(),   // siempre el día en que se entra al tablero
     // Semilla de respaldo: se pisa apenas responden las cotizaciones automáticas
@@ -1795,6 +1821,7 @@ function App(){
           cheques:a.cheques?toBlob(a.cheques.base64):null,
           negocios:a.negocios?toBlob(a.negocios.base64):null,
           canjes:a.contratos?toBlob(a.contratos.base64):null,
+          clientes:a.clientes?toBlob(a.clientes.base64):null,
         };
         setFiles(nuevosFiles);
         // El TC y la pizarra de un tablero PUBLICADO son los que se usaron al generarlo (históricos),
@@ -1858,6 +1885,7 @@ function App(){
         cheques:['cheques','Cheques_en_cartera.xlsx'],
         negocios:['negocios','Negocios_ptes_de_facturar.xlsx'],
         contratos:['canjes','Reporte_Pos_Contratos.xlsx'],
+        clientes:['clientes','Clientes_cuit.xlsx'],
       };
       const archivos={};
       for(const key in nombres){
@@ -1958,6 +1986,7 @@ function App(){
           h(DropZone,{label:'Cheques en Cartera',hint:'Cheques_en_cartera.xlsx',file:files.cheques,onFile:f=>setFiles(p=>({...p,cheques:f})),icon:'🏦'}),
           h(DropZone,{label:'Negocios Ptes de Facturar (opcional)',hint:'Negocios_ptes_de_facturar.xlsx',file:files.negocios,onFile:f=>setFiles(p=>({...p,negocios:f})),icon:'📦'}),
           h(DropZone,{label:'Contratos Canje / FyO / Acopio',hint:'Reporte_Pos_Contratos.xlsx',file:files.canjes,onFile:f=>setFiles(p=>({...p,canjes:f})),icon:'🌾'}),
+          h(DropZone,{label:'Base de clientes con CUIT (opcional)',hint:'Si no se carga, usa la base del '+CUIT_BASE_FECHA,file:files.clientes,onFile:f=>setFiles(p=>({...p,clientes:f})),icon:'🪪'}),
         ),
         h('div',{className:'params-toggle-bar'},
           h('button',{className:'btn-toggle',onClick:()=>setShowParams(p=>!p)},showParams?'▲':'▼',' Parámetros del tablero ',h('span',{className:'params-badge'},'TC: $'+params.tc.toLocaleString('es-AR')))
