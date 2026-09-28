@@ -1776,8 +1776,11 @@ function App(){
     let activo=true;
     (async()=>{
       try{
-        const res=await fetch('/api/archivos/latest');
-        if(!res.ok)throw new Error('status '+res.status);
+        const res=await fetch('/api/archivos/latest',{cache:'no-store'});
+        if(!res.ok){
+          const err=await res.json().catch(()=>({}));
+          const e=new Error(err.error||('status '+res.status));e.status=res.status;throw e;
+        }
         const data=await res.json();
         const a=data.archivos||{};
         const tipo='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet';
@@ -1820,7 +1823,10 @@ function App(){
         }
       }catch(e){
         if(!activo)return;
-        setAutoLoad({status:'error',msg:'No hay ningún tablero publicado todavía. Subilos a mano abajo, como siempre.'});
+        // 404 = todavía no se publicó nada. Otro error = problema de configuración en Vercel: se muestra tal cual.
+        setAutoLoad({status:'error',msg:(e.status===404||!e.status)
+          ?'No hay ningún tablero publicado todavía. Subilos a mano abajo, como siempre.'
+          :'No se pudo traer el tablero publicado ('+e.message+'). Podés subir los archivos a mano abajo.'});
       }
     })();
     return()=>{activo=false;};
