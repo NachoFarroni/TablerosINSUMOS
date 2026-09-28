@@ -57,7 +57,7 @@ body{font-family:var(--font-sans);background:var(--gray-50);color:var(--gray-800
 .section-header{margin-bottom:28px}
 .section-header h2{font-size:1.6rem;font-weight:700;color:var(--navy);letter-spacing:-.03em}
 .section-header p{color:var(--gray-600);margin-top:6px;font-size:.9rem}
-.dropzones-grid{display:grid;grid-template-columns:repeat(5,1fr);gap:16px;margin-bottom:28px}
+.dropzones-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:16px;margin-bottom:28px}
 @media(max-width:900px){.dropzones-grid{grid-template-columns:repeat(2,1fr)}}
 .dropzone{border:2px dashed var(--gray-200);border-radius:var(--radius-lg);background:var(--white);padding:28px 16px 24px;cursor:pointer;transition:all .2s;display:flex;flex-direction:column;align-items:center;gap:8px;text-align:center;box-shadow:var(--shadow)}
 .dropzone:hover{border-color:var(--blue-light);background:var(--sky);transform:translateY(-2px)}
@@ -616,6 +616,46 @@ function parseCheques(wb,tc){
   return out;
 }
 
+// ═══ CHEQUES DESDE LA CTA CTE APLICADA ═══
+// Reemplaza al Excel de "Valores en cartera": ese reporte mostraba cheques ya aplicados (Tesorería
+// hace la OP más tarde) y se descontaban dos veces. Ahora se toman de la Cta Cte aplicada:
+//   · comprobante RI, en $ (TC de emisión vacío)
+//   · concepto "RI Interbanking" o "cheque"
+//   · sólo lo que sigue PENDIENTE DE APLICAR, desde $1.000 (SALDO_MOVIMIENTOS_AFECTADOS). Un RI ya aplicado
+//     queda con saldo ~0 y no resta nada, así que no hay doble descuento.
+// El $ pendiente se pasa a USD con el TC del tablero, igual que antes. El período lo define la
+// Fecha de Vencimiento del RI (fecha de acreditación del valor).
+const CHQ_CONCEPTOS=/interbanking|cheque/i;
+const CHQ_MIN_ARS=1000;   // sólo saldos pendientes de $1.000 para arriba: los $0,01 y similares son residuos de aplicación
+function parseChequesCta(wb,tc){
+  const rows=sheetToRows(wb);if(!rows.length)return[];
+  const h=rows[0].map(x=>(x||'').toString());
+  const cC=findCol(h,['Nombre del Productor','Productor','Cliente','Nombre']);
+  const cComp=findCol(h,['Comprobante']);
+  const cConc=findCol(h,['Concepto']);
+  const cTC=findCol(h,['Tipo de Cambio','TipoCambio','TC']);
+  const cPend=findCol(h,['SALDO_MOVIMIENTOS_AFECTADOS','Saldo.*Movim']);
+  const cFcomp=findCol(h,['Fecha Comprobante','FechaComprobante']);
+  const cFvto=findCol(h,['Fecha Vencimiento','Vencimiento']);
+  const cCuit=findCol(h,['^CUIT$','CUIT']);
+  const out=[];
+  if(cComp<0||cConc<0||cPend<0){out.faltanColumnas=true;return out;}
+  for(let i=1;i<rows.length;i++){
+    const r=rows[i];if(!r||!r[cC])continue;
+    const tipo=(r[cComp]||'').toString().trim().split(/\s+/)[0].toUpperCase();
+    if(tipo!=='RI')continue;
+    if(cTC>=0&&num(r[cTC])>0)continue;                       // sólo RI en $
+    if(!CHQ_CONCEPTOS.test((r[cConc]||'').toString()))continue;
+    const pendARS=-num(r[cPend]);                             // viene negativo (crédito del cliente)
+    if(Math.abs(pendARS)<CHQ_MIN_ARS)continue;                // ya aplicado o residuo (ej. $0,01)
+    const usd=pendARS/tc;
+    out.push({_c:canonical(r[cC]),_cuit:cCuit>=0?cuitDigits(r[cCuit]):'',_d:parseDate(r[cFvto]),_m:usd,
+      numero:(r[cComp]||'').toString().trim(),concepto:(r[cConc]||'').toString().trim(),
+      fechaEmision:cFcomp>=0?r[cFcomp]:null,fechaPago:r[cFvto],importeARS:pendARS,importeUSD:usd});
+  }
+  return out;
+}
+
 function parseCanjes(wb,tc,precios){
   const rows=sheetToRows(wb);if(!rows.length)return[];
   const h=rows[0].map(x=>(x||'').toString());
@@ -750,12 +790,13 @@ function processFiles(files,params){
   const hoy=new Date();hoy.setHours(0,0,0,0);
   const ref=parseISODate(fechaTablero)||hoy;
   const sinNegocios=!files.negocios;   // el Excel de Negocios es OPCIONAL
-  return Promise.all([loadWB(files.ctaCte),loadWB(files.cheques),
+  // Ya no se usa el Excel de Valores en cartera: los cheques salen de la propia Cta Cte.
+  return Promise.all([loadWB(files.ctaCte),
                       sinNegocios?Promise.resolve(null):loadWB(files.negocios),loadWB(files.canjes),
                       files.clientes?loadWB(files.clientes).catch(()=>null):Promise.resolve(null)])
-    .then(([wCta,wChq,wNeg,wCanje,wCli])=>{
+    .then(([wCta,wNeg,wCanje,wCli])=>{
       const recCta=parseCta(wCta),recNeg=wNeg?parseNegocios(wNeg):[],
-            recChq=parseCheques(wChq,tc),recCanje=parseCanjes(wCanje,tc,precios);
+            recChq=parseChequesCta(wCta,tc),recCanje=parseCanjes(wCanje,tc,precios);
       const{cuitPorKey,avisos}=resolverClientes(recCta,[[recCanje,'Contratos'],[recChq,'Cheques'],[recNeg,'Pte Facturar']]);
       const dirCta=recCta.directorio||{};
       // Prioridad del CUIT: archivos del tablero → base cargada en el recuadro → base fija del código
@@ -889,7 +930,7 @@ function calcDeudaVencida(recCta,corte){
 function calcRespaldo(recChq,recCanje,tcDV,precios,corte){
   const out={};
   const ini=c=>{if(!out[c])out[c]={chqTotal:0,cheques:[],contratos:[],cttoTotal:0,fuera:[]}};
-  for(const r of recChq){                       // ya vienen filtrados por Medio Pago = "T"
+  for(const r of recChq){                       // RI de la Cta Cte pendientes de aplicar
     const usd=num(r.importeARS)/(tcDV||1);
     if(Math.abs(usd)<0.005)continue;
     ini(r._c);out[r._c].chqTotal+=usd;
@@ -1171,12 +1212,12 @@ function DetailModal({row,onClose}){
         ),
         // Cheques
         h('div',{className:'modal-section'},
-          h('div',{className:'modal-section-title'},'🏦 Cheques en Cartera (tipo T) (',d.cheques.length,')'),
+          h('div',{className:'modal-section-title'},'🏦 Cheques / Interbanking a aplicar (RI Cta Cte) (',d.cheques.length,')'),
           d.cheques.length===0?h('div',{className:'empty-section'},'Sin cheques en el período'):
           h('table',{className:'mini-table'},
-            h('thead',{},h('tr',{},h('th',{style:{textAlign:'left'}},'Nro Cheque'),h('th',{},'Fecha Emisión'),h('th',{},'Fecha Pago'),h('th',{},'Importe ARS'),h('th',{},'Importe USD'))),
+            h('thead',{},h('tr',{},h('th',{style:{textAlign:'left'}},'Comprobante'),h('th',{},'Fecha Comprob.'),h('th',{},'Fecha Vto'),h('th',{},'Importe ARS'),h('th',{},'Importe USD'))),
             h('tbody',{},d.cheques.map((c,i)=>h('tr',{key:i},
-              h('td',{},c.numero||'—'),h('td',{},fmtDate(c.fechaEmision)),h('td',{},fmtDate(c.fechaPago)),
+              h('td',{title:c.concepto||''},c.numero||'—'),h('td',{},fmtDate(c.fechaEmision)),h('td',{},fmtDate(c.fechaPago)),
               h('td',{},'$'+c.importeARS.toLocaleString('es-AR',{minimumFractionDigits:2,maximumFractionDigits:2})),
               h('td',{className:'cell-green'},fmtUSD(-c.importeUSD,true))
             ))),
@@ -1519,7 +1560,7 @@ function DVDetailModal({row,onClose}){
       h('div',{className:'modal-body'},
         h('div',{className:'modal-summary'},
           card('Part. Venc. USD',fmtUSD(row.total),'red'),
-          card('Cheques en cartera',row.chqTotal?fmtUSD(row.chqTotal):'—'),
+          card('Cheques a aplicar',row.chqTotal?fmtUSD(row.chqTotal):'—'),
           card('Contratos de canje',row.cttoTotal?fmtUSD(row.cttoTotal):'—'),
           card('Respaldo total',row.respaldo?fmtUSD(row.respaldo):'—'),
         ),
@@ -1539,8 +1580,8 @@ function DVDetailModal({row,onClose}){
           )
         ),
         h('div',{className:'modal-section'},
-          h('div',{className:'modal-section-title'},'🏦 Cheques en cartera (tipo T) (',row.cheques.length,')'),
-          row.cheques.length===0?h('div',{className:'empty-section'},'Sin cheques en cartera'):
+          h('div',{className:'modal-section-title'},'🏦 Cheques / Interbanking a aplicar (',row.cheques.length,')'),
+          row.cheques.length===0?h('div',{className:'empty-section'},'Sin cheques ni Interbanking pendientes de aplicar'):
           h('table',{className:'mini-table'},
             h('thead',{},h('tr',{},h('th',{style:{textAlign:'left'}},'Nro Cheque'),h('th',{},'Fecha Pago'),
               h('th',{},'Importe ARS'),h('th',{},'Importe USD'))),
@@ -1701,7 +1742,7 @@ function DeudaVencidaView({rows,corte,onCorte,tc,onTc,precios,dvState,onDvState,
 
 // ═══ MAIN APP ═══
 function App(){
-  const[files,setFiles]=useState({ctaCte:null,cheques:null,negocios:null,canjes:null,clientes:null});
+  const[files,setFiles]=useState({ctaCte:null,negocios:null,canjes:null,clientes:null});
   const[params,setParams]=useState({
     fechaTablero:hoyISO(),   // siempre el día en que se entra al tablero
     // Semilla de respaldo: se pisa apenas responden las cotizaciones automáticas
@@ -1778,7 +1819,7 @@ function App(){
   useEffect(()=>{saveStorage(seguimiento);},[seguimiento]);
   useEffect(()=>{saveDV(dvState);},[dvState]);
 
-  const allLoaded=!!(files.ctaCte&&files.cheques&&files.canjes);   // Negocios es opcional
+  const allLoaded=!!(files.ctaCte&&files.canjes);   // Negocios y Base de clientes son opcionales; cheques salen de la Cta Cte
 
   const handleProcess=useCallback(async()=>{
     if(!allLoaded)return;
@@ -1818,7 +1859,6 @@ function App(){
         if(!activo)return;
         const nuevosFiles={
           ctaCte:a.cta_cte?toBlob(a.cta_cte.base64):null,
-          cheques:a.cheques?toBlob(a.cheques.base64):null,
           negocios:a.negocios?toBlob(a.negocios.base64):null,
           canjes:a.contratos?toBlob(a.contratos.base64):null,
           clientes:a.clientes?toBlob(a.clientes.base64):null,
@@ -1833,7 +1873,7 @@ function App(){
         }
         setAutoLoad({status:'ok',msg:'✓ Tablero publicado cargado automáticamente'+(data.fecha?(' ('+data.fecha+')'):'')});
 
-        const listosParaProcesar=nuevosFiles.ctaCte&&nuevosFiles.cheques&&nuevosFiles.canjes;
+        const listosParaProcesar=nuevosFiles.ctaCte&&nuevosFiles.canjes;
         if(listosParaProcesar){
           setLoading(true);
           try{
@@ -1882,7 +1922,6 @@ function App(){
     try{
       const nombres={
         cta_cte:['ctaCte','Cta_cte_clientes.xlsx'],
-        cheques:['cheques','Cheques_en_cartera.xlsx'],
         negocios:['negocios','Negocios_ptes_de_facturar.xlsx'],
         contratos:['canjes','Reporte_Pos_Contratos.xlsx'],
         clientes:['clientes','Clientes_cuit.xlsx'],
@@ -1983,7 +2022,6 @@ function App(){
         h('div',{className:'section-header'},h('h2',{},'Cargá los archivos'),h('p',{},'Arrastrá o hacé clic en cada zona para seleccionar el Excel correspondiente')),
         h('div',{className:'dropzones-grid'},
           h(DropZone,{label:'Cuenta Corriente Clientes',hint:'Cta_cte_clientes.xlsx',file:files.ctaCte,onFile:f=>setFiles(p=>({...p,ctaCte:f})),icon:'📋'}),
-          h(DropZone,{label:'Cheques en Cartera',hint:'Cheques_en_cartera.xlsx',file:files.cheques,onFile:f=>setFiles(p=>({...p,cheques:f})),icon:'🏦'}),
           h(DropZone,{label:'Negocios Ptes de Facturar (opcional)',hint:'Negocios_ptes_de_facturar.xlsx',file:files.negocios,onFile:f=>setFiles(p=>({...p,negocios:f})),icon:'📦'}),
           h(DropZone,{label:'Contratos Canje / FyO / Acopio',hint:'Reporte_Pos_Contratos.xlsx',file:files.canjes,onFile:f=>setFiles(p=>({...p,canjes:f})),icon:'🌾'}),
           h(DropZone,{label:'Base de clientes con CUIT (opcional)',hint:'Si no se carga, usa la base del '+CUIT_BASE_FECHA,file:files.clientes,onFile:f=>setFiles(p=>({...p,clientes:f})),icon:'🪪'}),
@@ -1995,7 +2033,7 @@ function App(){
         h('div',{className:'process-row'},
           error&&h('div',{className:'error-msg'},error),
           h('button',{className:'btn btn-process',onClick:handleProcess,disabled:!allLoaded||loading},
-            loading?h('span',{},h('span',{className:'spinner'}),' Procesando…'):!allLoaded?'Faltan archivos — cargá Cta Cte, Cheques y Canjes':'▶  Generar tablero'
+            loading?h('span',{},h('span',{className:'spinner'}),' Procesando…'):!allLoaded?'Faltan archivos — cargá Cta Cte y Contratos':'▶  Generar tablero'
           )
         )
       ),
@@ -2015,7 +2053,7 @@ function App(){
             sub:(consExport?consExport.metrica:'')+' · suma de todas las columnas',accent:'navy'}),
         ):h('div',{className:'summary-strip'},
           h(SummaryCard,{label:'Deuda total · '+activePeriod.label,value:sumCol(currentRows,'deuda'),sub:currentRows.length+' clientes'}),
-          h(SummaryCard,{label:'Cheques en cartera',value:Math.abs(sumCol(currentRows,'chq')),sub:'Solo tipo T · por fecha de pago',accent:'green'}),
+          h(SummaryCard,{label:'Cheques / Interbanking',value:Math.abs(sumCol(currentRows,'chq')),sub:'RI de la Cta Cte pendientes de aplicar',accent:'green'}),
           h(SummaryCard,{label:'Contratos de canje',value:Math.abs(sumCol(currentRows,'canje')),sub:'Con IVA 10,5%',accent:'green'}),
           h(SummaryCard,{label:'TOTAL GENERAL',value:sumCol(currentRows,'total'),sub:'Deuda neta a cobrar',accent:'navy'}),
         ),
