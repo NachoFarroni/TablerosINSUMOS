@@ -639,13 +639,17 @@ function parseChequesCta(wb,tc){
   const cFvto=findCol(h,['Fecha Vencimiento','Vencimiento']);
   const cCuit=findCol(h,['^CUIT$','CUIT']);
   const out=[];
-  if(cComp<0||cConc<0||cPend<0){out.faltanColumnas=true;return out;}
+  const faltan=[[cComp,'Comprobante'],[cConc,'Concepto'],[cPend,'SALDO_MOVIMIENTOS_AFECTADOS']].filter(x=>x[0]<0).map(x=>x[1]);
+  out.diag={faltan,riTotal:0,riConcepto:0};
+  if(faltan.length)return out;
   for(let i=1;i<rows.length;i++){
     const r=rows[i];if(!r||!r[cC])continue;
     const tipo=(r[cComp]||'').toString().trim().split(/\s+/)[0].toUpperCase();
     if(tipo!=='RI')continue;
+    out.diag.riTotal++;
     if(cTC>=0&&num(r[cTC])>0)continue;                       // sólo RI en $
     if(!CHQ_CONCEPTOS.test((r[cConc]||'').toString()))continue;
+    out.diag.riConcepto++;
     const pendARS=-num(r[cPend]);                             // viene negativo (crédito del cliente)
     if(Math.abs(pendARS)<CHQ_MIN_ARS)continue;                // ya aplicado o residuo (ej. $0,01)
     const usd=pendARS/tc;
@@ -853,7 +857,8 @@ function processFiles(files,params){
                          limpieza:{...(recCta.excluidas||{tc:0,comp:0}),sinColTC:!!recCta.sinColTC}};
 
       return{periods,consolidado,diasVencidos:calcDiasVencidos(recCta,hoy),fechaRef:ref,
-             recs:{cta:recCta,chq:recChq,canje:recCanje},sinNegocios};
+             recs:{cta:recCta,chq:recChq,canje:recCanje},sinNegocios,
+             chqDiag:{...(recChq.diag||{faltan:[],riTotal:0,riConcepto:0}),n:recChq.length}};
     });
 }
 
@@ -2039,6 +2044,13 @@ function App(){
       ),
 
       result&&navTab==='tablero'&&h('section',{className:'results-section'},
+        result.chqDiag&&result.chqDiag.n===0&&h('div',{className:'cons-aviso',style:{fontSize:'.8rem'}},
+          '⚠️ No se tomó ningún cheque de la Cta Cte. ',
+          result.chqDiag.faltan.length
+            ?'Al archivo cargado le faltan las columnas: '+result.chqDiag.faltan.join(', ')+'. Tiene que ser la Cta Cte aplicada cruda (bajada de Algoritmo).'
+            :(result.chqDiag.riTotal===0
+              ?'El archivo no tiene ningún comprobante RI: probablemente es una Cta Cte ya limpiada a mano. Subí la bajada cruda.'
+              :('Hay '+result.chqDiag.riTotal+' RI, '+result.chqDiag.riConcepto+' en $ con concepto cheque / RI Interbanking, pero ninguno con saldo pendiente de $1.000 o más.'))),
         result.sinNegocios&&h('div',{className:'dv-banner'},
           '⚠ No se cargó el Excel de Negocios Ptes de Facturar: la columna "Pte de Facturar" queda en cero en todas las pestañas. La sección Deuda Vencida no lo usa.'),
         esCons?h('div',{className:'summary-strip',style:{gridTemplateColumns:'repeat(3,1fr)'}},
