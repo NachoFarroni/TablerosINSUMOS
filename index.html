@@ -823,15 +823,19 @@ function processFiles(files,params){
       const periods=[{key:'vencido',label:'Vencido a la fecha',s:null,e:ref}];
       keys.forEach(k=>{const p=periodDates(k);periods.push({key:k,label:p.label,s:p.s,e:p.e});});
       // Para cualquier vista "acumulada" (s:null → todo lo vencido hasta una fecha, sin piso),
-      // un contrato de canje solo cubre esa deuda si su entrega cae hasta 1 mes después del mes
-      // de referencia (ej.: deuda vencida en agosto → se toman contratos con entrega hasta agosto
-      // y, como mucho, septiembre). Un contrato con entrega más lejana (el año que viene, etc.)
-      // NO se contempla para cancelar deuda ya vencida: va a aparecer en la pestaña de su propio
-      // mes futuro, no acá. Aplica tanto a "Vencido a la fecha" como a la primera columna del
-      // consolidado (que también acumula todo lo vencido hasta el mes corriente).
-      const limiteCanjeVencido=new Date(ref.getFullYear(),ref.getMonth()+2,0);
+      // un contrato de canje solo cubre esa deuda si su entrega cae dentro del MES DE REFERENCIA,
+      // incluso si la fecha de entrega ya pasó (ej.: tablero al 5/10 → se toman contratos con
+      // entrega hasta el 31/10). Un contrato que entrega después NO cancela deuda ya vencida:
+      // aparece en la pestaña de su propio mes.
+      //
+      // ¡OJO! Este límite NO puede pasar del último día del mes de referencia. Si se extiende
+      // (antes llegaba hasta fin del mes SIGUIENTE), un contrato que entrega el 1/11 cae a la vez
+      // en la vista acumulada y en la pestaña de noviembre; en el consolidado —donde las columnas
+      // SE SUMAN para dar el Total— eso lo descuenta dos veces. Caso real: contrato 290249 de
+      // ELORZA AGRO, restado en "Oct '26" y de nuevo en "Nov '26".
+      const limiteCanjeVencido=new Date(ref.getFullYear(),ref.getMonth()+1,0);
       const armar=p=>{
-        const eCanje=p.s===null?limiteCanjeVencido:p.e;
+        const eCanje=p.eCanje!==undefined?p.eCanje:(p.s===null?limiteCanjeVencido:p.e);
         return buildTable(agg(recCta,p.s,p.e),agg(recNeg,p.s,p.e),agg(recChq,p.s,p.e),agg(recCanje,p.s,eCanje),conDeuda);
       };
       periods.forEach(p=>{p.rows=armar(p);p.rows.forEach(r=>{r.cuit=cuitDe(r.cliente);});});
@@ -841,8 +845,12 @@ function processFiles(files,params){
       // es todo vencimiento <= último día del mes corriente. Así no se superpone con
       // nada y el total por cliente es la suma limpia de las columnas.
       const finMesCorriente=new Date(ref.getFullYear(),ref.getMonth()+1,0);
+      // eCanje explícito = la misma fecha de cierre de la columna. En el consolidado las columnas
+      // se suman, así que CADA registro —incluidos los contratos de canje— tiene que caer en una
+      // sola. Fijarlo acá deja el consolidado a salvo aunque algún día se vuelva a ampliar
+      // limiteCanjeVencido para las pestañas.
       const consCols=[{key:curKey,label:periodDates(curKey).label,corto:mesCorto(curKey),
-                       s:null,e:finMesCorriente,acum:true}];
+                       s:null,e:finMesCorriente,eCanje:finMesCorriente,acum:true}];
       keys.filter(k=>k>curKey).forEach(k=>{const p=periodDates(k);
         consCols.push({key:k,label:p.label,corto:mesCorto(k),s:p.s,e:p.e,acum:false});});
       const mapa=new Map();
@@ -932,6 +940,12 @@ function calcDeudaVencida(recCta,corte){
 // Respaldo con el TC PROPIO de la sección. Los cheques NO se filtran por fecha de pago.
 // Los contratos de canje SÍ: uno con entrega más allá de 1 mes después del mes de corte
 // no cubre esta deuda ya vencida (va a aparecer como cobertura recién en su propio mes).
+//
+// Acá la ventana es a propósito más ancha que la del tablero (que corta a fin del mes de
+// referencia): en Deuda Vencida los contratos NO se restan de ningún importe, sólo se informan
+// en Comentarios. Mostrar "Ctto 300111 pte de entrega" de algo que entrega el mes que viene es
+// información útil para gestión y no distorsiona ningún total. En el tablero y el consolidado,
+// en cambio, el canje SÍ se descuenta, y ahí la ventana ancha duplicaba el descuento.
 function calcRespaldo(recChq,recCanje,tcDV,precios,corte){
   const out={};
   const ini=c=>{if(!out[c])out[c]={chqTotal:0,cheques:[],contratos:[],cttoTotal:0,fuera:[]}};
