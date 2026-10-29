@@ -363,6 +363,24 @@ td.dv-c-quitar{text-align:center;padding:6px 6px!important}
 .rep-log-usd{margin-left:auto;font-weight:700;font-variant-numeric:tabular-nums}
 @media print{.rep-acciones,.rep-estado{display:none}}
 
+.header-inner{display:grid;grid-template-columns:1fr auto 1fr;align-items:center}
+.header-espacio{min-width:0}
+.header-nav{justify-self:center;max-width:100%;overflow-x:auto;scrollbar-width:none}
+.header-nav::-webkit-scrollbar{display:none}
+.header-acciones-fila{max-width:1500px;margin:0 auto;padding:0 24px 10px;display:flex;justify-content:flex-end}
+.header-actions .btn{padding:5px 11px;font-size:.74rem;border-radius:7px;gap:5px}
+.header-aviso{max-width:1500px;margin:0 auto;padding:0 24px 8px}
+/* La marca nunca se parte en varias líneas */
+.header-title,.header-sub{white-space:nowrap}
+/* Por debajo de ~1280px las tres columnas no entran sin apretar la marca:
+   ahí el encabezado se apila y todo queda centrado. */
+@media(max-width:1280px){
+  .header-inner{grid-template-columns:1fr;justify-items:center;gap:10px;text-align:center}
+  .header-espacio{display:none}
+  .header-acciones-fila{justify-content:center;padding-bottom:12px}
+  .header-actions{justify-content:center}
+}
+
 </style>
 </head>
 <body><div id="root"></div>
@@ -3054,7 +3072,10 @@ function App(){
           h('button',{className:'nav-tab'+(navTab==='deudavencida'?' active':''),onClick:()=>setNavTab('deudavencida')},'📅 Deuda Vencida'),
           h('button',{className:'nav-tab'+(navTab==='reporte'?' active':''),onClick:()=>setNavTab('reporte')},'📧 Reporte de Deuda'),
         ),
-        result&&h('div',{className:'header-actions'},
+        h('div',{className:'header-espacio'})
+      ),
+      result&&h('div',{className:'header-acciones-fila'},
+        h('div',{className:'header-actions'},
           h('button',{className:'btn btn-ghost',onClick:()=>{setResult(null);setShowParams(true);setNavTab('tablero');}},'← Nueva consulta'),
           h('button',{className:'btn btn-ghost',onClick:()=>window.print()},'🖨 PDF'),
           h('button',{className:'btn btn-primary',onClick:()=>exportToExcel(result.periods,params,obs,{rows:dvAll.filter(r=>!r.quitado),corte:dvCorte,tc:dvTc},consExport)},'↓ Exportar Excel'),
@@ -3062,7 +3083,7 @@ function App(){
             publishState.status==='loading'?'Publicando…':'📤 Publicar para compartir'),
         )
       ),
-      result&&publishState.status!=='idle'&&h('div',{className:'header-inner',style:{paddingTop:0,paddingBottom:8}},
+      result&&publishState.status!=='idle'&&h('div',{className:'header-aviso'},
         h('div',{className:'error-msg',style:publishState.status==='ok'?{background:'#f0fdf4',border:'1px solid #86efac',color:'#16a34a'}:publishState.status==='loading'?{background:'#eff6ff',border:'1px solid #93c5fd',color:'#2563eb'}:{}},
           publishState.msg))
     ),
