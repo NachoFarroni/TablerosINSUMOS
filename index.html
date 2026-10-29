@@ -398,6 +398,13 @@ td.dv-c-quitar{text-align:center;padding:6px 6px!important}
   .header-actions{justify-content:center}
 }
 
+.header-sello{display:inline-flex;align-items:center;gap:7px;background:rgba(255,255,255,.16);border:1px solid rgba(255,255,255,.26);color:var(--white);border-radius:20px;padding:4px 12px;font-size:.73rem;font-weight:600;white-space:nowrap}
+.header-sello-punto{width:7px;height:7px;border-radius:50%;background:#4ADE80;box-shadow:0 0 0 3px rgba(74,222,128,.25);flex-shrink:0}
+.header-acciones-fila{justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap}
+.header-acciones-fila .header-actions{margin-left:auto}
+@media(max-width:1280px){.header-acciones-fila{justify-content:center}.header-acciones-fila .header-actions{margin-left:0}}
+@media print{.header-sello{display:none}}
+
 </style>
 </head>
 <body><div id="root"></div>
@@ -424,6 +431,15 @@ function parseDate(v){
   const s=v.toString().trim();
   const m=s.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})$/);if(m)return new Date(+m[3],+m[2]-1,+m[1]);
   const d=new Date(s);return isNaN(d)?null:d;
+}
+// "2026-10-28T15:28:10.000Z" -> "28/10/2026 12:28" (hora local de quien mira)
+function fmtSello(iso){
+  const d=iso?new Date(iso):null;
+  if(!d||isNaN(d))return '';
+  // hour12:false no alcanza en todos los navegadores: segun la configuracion
+  // sale "03:28 p. m." en vez de "15:28". Se arma a mano y listo.
+  const hh=String(d.getHours()).padStart(2,'0'),mm=String(d.getMinutes()).padStart(2,'0');
+  return d.toLocaleDateString('es-AR')+' '+hh+':'+mm;
 }
 function fmtDate(v){const d=parseDate(v);if(!d)return '';return d.toLocaleDateString('es-AR');}
 function inPeriod(v,s,e){const d=parseDate(v);if(!d)return false;const t=d.getTime();return t>=(s?s.getTime():-Infinity)&&t<=(e?e.getTime():Infinity);}
@@ -2883,6 +2899,9 @@ function App(){
   // TC/pizarra "congelados" al momento de publicar). Evita que la cotización automática del día
   // de HOY (más abajo) pise esos valores históricos cuando alguien abre el link más tarde.
   const publicadoRef=useRef(false);
+  // Fecha y hora de la última publicación, para que quien abre el link sepa
+  // qué tan fresco es lo que está mirando.
+  const[publicadoEn,setPublicadoEn]=useState(null);
 
   // Al entrar (y al recargar) se piden solas: fecha de hoy, TC y pizarra del día anterior
   const cargarCotiz=useCallback(async()=>{
@@ -2973,9 +2992,13 @@ function App(){
         // El TC y la pizarra de un tablero PUBLICADO son los que se usaron al generarlo (históricos),
         // no los del día en que alguien lo abre — por eso pisan a la cotización automática de "hoy"
         // y quedan protegidos por publicadoRef para que cargarCotiz no los vuelva a pisar después.
+        const sello=(data.params&&data.params.publicadoEn)||data.publicadoEn||null;
+        if(sello)setPublicadoEn(sello);
         if(data.params){
           publicadoRef.current=true;
-          setParams(p=>({...p,...data.params}));
+          // publicadoEn no es un parámetro del tablero: se saca antes de mezclarlo
+          const{publicadoEn:_sello,...paramsTablero}=data.params;
+          setParams(p=>({...p,...paramsTablero}));
         }
         setAutoLoad({status:'ok',msg:'✓ Tablero publicado cargado automáticamente'+(data.fecha?(' ('+data.fecha+')'):'')});
 
@@ -3038,10 +3061,11 @@ function App(){
         const file=files[fkey];
         if(file)archivos[key]={nombre:file.name||defaultName,base64:await fileToBase64(file)};
       }
+      const sello=new Date().toISOString();
       const body={
         fecha:params.fechaTablero,
         archivos,
-        params:{fechaTablero:params.fechaTablero,tc:params.tc,precios:params.precios},
+        params:{fechaTablero:params.fechaTablero,tc:params.tc,precios:params.precios,publicadoEn:sello},
       };
       const res=await fetch('/api/archivos/update',{
         method:'POST',
@@ -3054,6 +3078,7 @@ function App(){
         throw new Error(err.error||('status '+res.status));
       }
       sessionStorage.setItem('tablero_publish_secret',secret);
+      setPublicadoEn(sello);
       setPublishState({status:'ok',msg:'✓ Publicado — quien abra el link ahora ve este tablero, sin subir nada.'});
     }catch(e){
       setPublishState({status:'error',msg:'Error al publicar: '+e.message});
@@ -3097,6 +3122,9 @@ function App(){
         h('div',{className:'header-espacio'})
       ),
       result&&h('div',{className:'header-acciones-fila'},
+        publicadoEn&&h('span',{className:'header-sello',
+          title:'Fecha y hora en que se publicó este tablero para compartir'},
+          h('span',{className:'header-sello-punto'}),'Actualizado '+fmtSello(publicadoEn)),
         h('div',{className:'header-actions'},
           h('button',{className:'btn btn-ghost',onClick:()=>{setResult(null);setShowParams(true);setNavTab('tablero');}},'← Nueva consulta'),
           h('button',{className:'btn btn-ghost',onClick:()=>window.print()},'🖨 PDF'),
