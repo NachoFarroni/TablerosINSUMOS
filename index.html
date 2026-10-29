@@ -339,6 +339,23 @@ td.dv-c-quitar{text-align:center;padding:6px 6px!important}
 .rep-table tbody tr:nth-child(even) td{background:#F1FAF8}
 .rep-table tfoot .dv-totals td{border-top:2px solid #2A9984;font-weight:700}
 .rep-caret{display:inline-block;width:14px;color:#2A9984;font-weight:700}
+/* Cubierto y Descubierto: mismo criterio que en el Excel — encabezado en un verde más
+   oscuro y celdas con un tinte más marcado que el de las filas alternas, para que las dos
+   columnas se lean como un bloque aparte. --rep-cub lo usa también la barra de datos. */
+:root{--rep-cub:#D9F0EA;--rep-cub-alt:#C9EAE1;--rep-cub-cab:#1F7A68}
+.rep-table thead th.rep-col-cub,.rep-table thead th.rep-col-desc{background:var(--rep-cub-cab)}
+.rep-table thead th.rep-col-cub:hover,.rep-table thead th.rep-col-desc:hover{background:#17604F}
+.rep-table tbody td.rep-col-cub,.rep-table tbody td.rep-col-desc,
+.rep-table tfoot td.rep-col-cub,.rep-table tfoot td.rep-col-desc{background:var(--rep-cub)}
+.rep-table tbody tr:nth-child(even) td.rep-col-cub,
+.rep-table tbody tr:nth-child(even) td.rep-col-desc{background:var(--rep-cub-alt)}
+.rep-table tbody tr.rep-cubierto td.rep-col-cub,
+.rep-table tbody tr.rep-cubierto td.rep-col-desc,
+.rep-table tfoot tr.rep-cubierto td.rep-col-cub,
+.rep-table tfoot tr.rep-cubierto td.rep-col-desc{background:var(--rep-cub)!important}
+.rep-table tfoot tr.rep-otros td.rep-col-cub,.rep-table tfoot tr.rep-otros td.rep-col-desc{background:var(--rep-cub-alt)}
+.rep-table tfoot tr.rep-otros:hover td.rep-col-cub,
+.rep-table tfoot tr.rep-otros:hover td.rep-col-desc{background:#B9E2D7}
 .rep-table thead th{cursor:pointer;user-select:none}
 .rep-table thead th:hover{background:#238070}
 .rep-tag{display:inline-block;margin-left:8px;background:var(--gray-100,#eef2f5);color:var(--gray-500);border-radius:20px;padding:1px 8px;font-size:.66rem;font-weight:700;white-space:nowrap}
@@ -1614,7 +1631,10 @@ const REP_TOPE_TABLA=15;
 // usa word-break en las celdas (que en Chrome se comporta como overflow-wrap:anywhere), así
 // que si esta columna se queda con el ancho, la de importes parte los números a la mitad
 // ("1.043.56 / 7"). Con 40 deja de pasar; 38 deja margen para importes de 8 dígitos.
-const REP_TOPE_SIT=38;   // filas en el mail; el detalle completo va en el Excel
+const REP_TOPE_SIT=38;
+// Área que firma el reporte. El mail y la imagen PNG se arman con el mismo HTML,
+// así que este valor gobierna las dos salidas.
+const REP_AREA='BO insumos';   // filas en el mail; el detalle completo va en el Excel
 // Los importes van SIEMPRE exactos, sin abreviar: ni "1.043,6" ni "USD 1,04 M".
 const repUSD=v=>Math.round(v||0).toLocaleString('es-AR');
 
@@ -1676,7 +1696,7 @@ async function generarMailReporte(R,destinos){
       filas:R.logistica.map(l=>['Ctto '+l.contrato,
         nombreCorto(l.cliente,18)+' · USD '+Math.round(l.usd).toLocaleString('es-AR')+(l.entregaVencida?' · entrega vencida':'')]),
     },m):'')
-    +MailFyo.cierre({texto:'Cualquier diferencia que vean, avísennos y la revisamos.',area:'Finanzas'},m);
+    +MailFyo.cierre({texto:'Cualquier diferencia que vean, avísennos y la revisamos.',area:REP_AREA},m);
 
   const base={marca:'acopio',
     preheader:'Descubierto USD '+repUSD(R.totalDescubierto)+' · '+R.aSeguir.length+' clientes a seguir',
@@ -2705,13 +2725,15 @@ function ReporteView({filas,corte,sinNegocios}){
 
   const sum=(arr,f)=>arr.reduce((a,c)=>a+f(c),0);
   const maxDesc=Math.max.apply(null,[1].concat(vistas.map(c=>c.descubierto)));
+  // La barra de datos termina en el tinte de la columna, no en transparente: el fondo
+  // inline pisa al del CSS, así que el color de la columna va dentro del propio gradiente.
   const barra=v=>{const p=Math.max(0,Math.min(100,(v/maxDesc)*100));
-    return{background:'linear-gradient(90deg, rgba(52,187,161,.38) '+p+'%, transparent '+p+'%)'};};
+    return{background:'linear-gradient(90deg, rgba(42,153,132,.45) '+p+'%, var(--rep-cub) '+p+'%)'};};
 
-  const thS=(key,label,ancho)=>h('th',{className:'dv-num',onClick:()=>{
+  const thS=(key,label,extra)=>h('th',{className:'dv-num'+(extra?' '+extra:''),onClick:()=>{
       if(sortKey===key)setSortDir(d=>d==='asc'?'desc':'asc');
       else{setSortKey(key);setSortDir('desc');}
-    },style:ancho?{minWidth:ancho}:null},
+    }},
     label,h('span',{className:'sort-arrow'},sortKey===key?(sortDir==='asc'?'↑':'↓'):'↕'));
 
   const fila=(c,comoCubierto)=>h('tr',{key:c.cliente,className:comoCubierto?'rep-cubierto':''},
@@ -2719,8 +2741,8 @@ function ReporteView({filas,corte,sinNegocios}){
       comoCubierto&&h('span',{className:'rep-tag'},'cubierto')),
     h('td',{className:'dv-num'},repUSD(c.vencido)),
     ...TRAMOS.map(i=>h('td',{key:i,className:'dv-num'},repUSD(c.buckets[i]))),
-    h('td',{className:'dv-num'},repUSD(c.cubierto)),
-    h('td',{className:'dv-num dv-c-tot',style:comoCubierto?null:barra(c.descubierto)},repUSD(c.descubierto)),
+    h('td',{className:'dv-num rep-col-cub'},repUSD(c.cubierto)),
+    h('td',{className:'dv-num dv-c-tot rep-col-desc',style:comoCubierto?null:barra(c.descubierto)},repUSD(c.descubierto)),
     h('td',{},c.comentario));
 
   return h('section',{className:'results-section'},
@@ -2778,7 +2800,7 @@ function ReporteView({filas,corte,sinNegocios}){
             'Cliente',h('span',{className:'sort-arrow'},sortKey==='cliente'?(sortDir==='asc'?'↑':'↓'):'↕')),
           thS('vencido','Vencido'),
           thS(0,'0-30'),thS(1,'31-60'),thS(2,'61-90'),thS(3,'+90'),
-          thS('cubierto','Cubierto'),thS('descubierto','Descubierto'),
+          thS('cubierto','Cubierto','rep-col-cub'),thS('descubierto','Descubierto','rep-col-desc'),
           h('th',{style:{textAlign:'left',minWidth:'260px',cursor:'default'}},'Comentarios'))),
         h('tbody',{},vistas.length
           ?vistas.map(c=>fila(c,filtrando&&cubiertoDe.has(c.cliente)))
@@ -2791,8 +2813,8 @@ function ReporteView({filas,corte,sinNegocios}){
               'Otros '+R.otros.n+' clientes con vencido cubierto'),
             h('td',{className:'dv-num'},repUSD(R.otros.usd)),
             ...TRAMOS.map(i=>h('td',{key:i,className:'dv-num'},repUSD(R.otros.buckets[i]))),
-            h('td',{className:'dv-num'},repUSD(R.otros.cubierto)),
-            h('td',{className:'dv-num'},repUSD(R.otros.descubierto)),
+            h('td',{className:'dv-num rep-col-cub'},repUSD(R.otros.cubierto)),
+            h('td',{className:'dv-num rep-col-desc'},repUSD(R.otros.descubierto)),
             h('td',{},abierto?'Cheques, contratos o plataformas cubren el vencido':'Clic para ver el detalle')),
           ...(!filtrando&&abierto?ordenar(R.cubiertos).map(c=>fila(c,true)):[]),
           h('tr',{className:'dv-totals'},
@@ -2800,9 +2822,9 @@ function ReporteView({filas,corte,sinNegocios}){
             h('td',{className:'dv-num'},repUSD(filtrando?sum(vistas,c=>c.vencido):R.totalVencido)),
             ...TRAMOS.map(i=>h('td',{key:i,className:'dv-num'},
               repUSD(filtrando?sum(vistas,c=>c.buckets[i]):R.buckets[i]))),
-            h('td',{className:'dv-num'},repUSD(filtrando?sum(vistas,c=>c.cubierto)
+            h('td',{className:'dv-num rep-col-cub'},repUSD(filtrando?sum(vistas,c=>c.cubierto)
               :sum(R.aSeguir,c=>c.cubierto)+R.otros.cubierto)),
-            h('td',{className:'dv-num'},repUSD(filtrando?sum(vistas,c=>c.descubierto):R.totalDescubierto)),
+            h('td',{className:'dv-num rep-col-desc'},repUSD(filtrando?sum(vistas,c=>c.descubierto):R.totalDescubierto)),
             h('td',{},''))))),
 
     R.logistica.length>0&&h('div',{className:'rep-logistica'},
